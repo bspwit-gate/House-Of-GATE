@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>การเข้าเรียน — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
+          <i data-lucide="arrow-left"></i> ย้อนกลับ
+    
+    </button>
+        <div class="logo">
+          <img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo">
+        </div>
+        <div class="title">
+          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <span>การเข้าเรียน</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+       
+ <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button id="btnLogout" class="btn mini" style="padding:8px 12px;
+margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  
+</header>
+<div class="container">
+  <div class="card"><div class="card-h"><div class="badge warn"><i data-lucide="alert-triangle"></i> หากเป็นหัวหน้าห้อง/นักเรียน ระบบจะล็อกห้องโดยอัตโนมัติ</div></div></div>
+</div>
+
+  <main class="container grid">
+    <div class="card">
+      <div class="card-h">
+        <div style="font-weight:900;
+display:flex; align-items:center; gap:8px">
+          <i data-lucide="check-circle"></i> สรุปการเข้าเรียนของฉัน
+        </div>
+        <div class="hint mini">เปอร์เซ็นต์คิดจาก “จำนวนครั้งที่ถูกเช็คชื่อจริง” • เกณฑ์ผ่าน ≥ 80%</div>
+      </div>
+      <div class="card-b">
+        <div class="table-wrap"><table>
+          <thead>
+            <tr>
+              <th>วิชา</th>
+     
+         <th>เปอร์เซ็นต์เข้าเรียน</th>
+              <th>ขาดได้อีกกี่ครั้ง</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody">
+            <tr><td colspan="4" style="text-align:center;color:#999">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+      
+  </table></div>
+      </div>
+    </div>
+
+    <div id="recordSection" class="card" style="display:none">
+      <div class="card-h" style="align-items:center">
+        <div style="font-weight:900;
+display:flex; align-items:center; gap:8px">
+          <i data-lucide="clipboard-check"></i> ลงเวลาเรียนรายวัน
+        </div>
+        <div class="toolbar">
+          <button id="btnLoadStudents" class="btn secondary">โหลดรายชื่อนักเรียน</button>
+          <button id="btnSaveAttendance" class="btn">บันทึกเช็คชื่อ</button>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="auth-col">
+  
+          <label>วันที่</label>
+            <input id="dateInput" type="date">
+          </div>
+          <div class="auth-col" id="classWrap" style="display:none">
+            <label>ห้อง</label>
+            <input id="classInput" placeholder="เช่น ม.5/2">
+          </div>
+          <div class="auth-col">
+     
+       <label>วิชา</label>
+            <select id="subjectSelect">
+              <option value="">-- เลือกวิชา --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hint mini" style="margin-top:8px">
+          * ติ๊กชื่อ = มาเรียน (Present) • เอาติ๊กออก = ขาด (Absent)
+   
+     </div>
+
+        <div id="studentList" class="grid" style="grid-template-columns:repeat(3,1fr);
+margin-top:10px"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b>
+  </footer>
+
+  <div id="busy" class="busy">
+    <div class="box">
+      <div class="spinner"></div>
+      <div id="busyMsg">กำลังประมวลผล...</div>
+    </div>
+  </div>
+
+  <script>
+    // =================== Config & Helpers ===================
+    const APPS_SCRIPT_URL =
+      localStorage.getItem('GAS_ENDPOINT') ||
+      'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+
+    const $  
+= sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+    function busy(show, msg='กำลังประมวลผล...'){
+      $('#busyMsg').textContent = msg;
+      $('#busy').style.display = show ? 'flex' : 'none';
+    }
+
+    async function api(action, payload){
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({action, payload})
+      });
+return res.json();
+    }
+
+    function hydrateHeader(user){
+      $('#roleBadge').textContent = (user.role || 'USER').toUpperCase();
+$('#userName').textContent = user.full_name || '-';
+    }
+
+    function statusChipByPercent(p){
+      if(p >= 80) return '<span class="chip">ผ่าน</span>';
+if(p >= 60) return '<span class="chip" style="color:#f59e0b">เสี่ยง</span>';
+      return '<span class="chip" style="color:#ef4444">ไม่ผ่าน</span>';
+}
+
+    function gauge(percent){
+      const p = Math.max(0, Math.min(100, percent|0));
+return `
+        <div class="gauge"><div style="width:${p}%"></div></div>
+        <div class="number" style="font-weight:800;margin-top:4px">${p}%</div>
+      `;
+}
+
+    // =================== Summary Table (Student view) ===================
+    async function loadSummary(user){
+      busy(true,'กำลังโหลดสรุปการเข้าเรียน...');
+const tbody = $('#summaryBody');
+      try{
+        const d = await api('getAttendanceProgress', { userId: user.user_id });
+if(d.status !== 'success'){
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#ef4444">โหลดไม่สำเร็จ</td></tr>';
+          busy(false); return;
+}
+        const rows = (d.progress || []).map(p => {
+          // รองรับทั้งโครงใหม่ (percent, canAbsentMore, status) และโครงเก่า (requiredSessions/attendedSessions)
+          let percent = p.percent;
+          if (percent == null && p.requiredSessions != null) {
+            percent = p.requiredSessions > 0 ? Math.round((p.attendedSessions / p.requiredSessions) * 100) : 0;
+          }
+    
+      let canAbsentMore = (p.canAbsentMore != null) ? p.canAbsentMore : 0;
+          if (p.stats && p.stats.maxAbsent != null && p.stats.absent != null && p.canAbsentMore == null){
+            canAbsentMore = Math.max(p.stats.maxAbsent - p.stats.absent, 0);
+          }
+          return `
+            <tr>
+            
+  <td>${p.subjectName}</td>
+              <td>${gauge(percent||0)}</td>
+              <td class="number">${canAbsentMore}</td>
+              <td>${statusChipByPercent(percent||0)}</td>
+            </tr>
+          `;
+        }).join('');
+tbody.innerHTML = rows || '<tr><td colspan="4" style="text-align:center;color:#999">ไม่มีข้อมูล</td></tr>';
+      }catch(err){
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#ef4444">เกิดข้อผิดพลาดในการโหลด</td></tr>';
+}finally{
+        busy(false);
+      }
+    }
+
+    // =================== Record Section (Leader/Teacher/Admin) ===================
+    function showRecordSectionByRole(user){
+      const record = $('#recordSection');
+const classWrap = $('#classWrap');
+      if(['leader','teacher','admin'].includes(user.role)){
+        record.style.display = 'block';
+}
+      if(['teacher','admin'].includes(user.role)){
+        classWrap.style.display = 'block';
+// ครู/แอดมินต้องเลือกห้อง
+      }
+    }
+
+    function renderSubjectOptions(list){
+      $('#subjectSelect').innerHTML = (list||[])
+        .map(s => `<option value="${s.SubjectID}|${s.SubjectName}|${s.CreditPerWeek||0}">${s.SubjectName}</option>`)
+        .join('') ||
+'<option value="">-- ไม่พบวิชา --</option>';
+    }
+
+    async function loadSubjectsForRole(user){
+      // leader/student → ใช้ห้องตัวเอง
+      if(user.role === 'leader' || user.role === 'student'){
+        const r = await api('getSubjectsByClass', { class: user.class_name });
+renderSubjectOptions(r.subjects || []);
+        return;
+      }
+      // teacher/admin → รอกรอกห้อง แล้วค่อยโหลด
+      const classInput = $('#classInput');
+const loadForClass = async () => {
+        const cls = classInput.value.trim();
+        if(!cls) return;
+const r = await api('getSubjectsByClass', { class: cls });
+        renderSubjectOptions(r.subjects || []);
+      };
+      classInput.addEventListener('change', loadForClass);
+// auto load ถ้ามีค่าเริ่มต้น
+      if(classInput.value) loadForClass();
+}
+
+    async function loadStudents(user){
+      let cls = user.class_name;
+if(['teacher','admin'].includes(user.role)){
+        cls = $('#classInput').value.trim();
+        if(!cls){ alert('กรุณากรอก/เลือกห้องก่อน'); return;
+}
+      }
+      busy(true,'กำลังโหลดรายชื่อนักเรียน...');
+const r = await api('getUsersByClass', { class: cls }); // ✅ FIX: ต้องแก้ API เป็น 'getUsers' หรือ 'getUsersByClass'
+      // สมมติว่า GAS มี 'getUsersByClass' ที่คืน { status:'success', users:[...] }
+      // ถ้าไม่มี ต้องแก้ GAS ให้มี หรือแก้ตรงนี้เป็น 'getUsers' แล้ว .filter(u => u.Class === cls)
+      // *** ขอสมมติว่า GAS มี 'getUsersByClass' ตามชื่อที่เรียก ***
+      
+      const list = r.status==='success' ? (r.users || []) : [];
+const box = $('#studentList');
+      box.innerHTML = list.length
+        ?
+list.map(st => `
+            <label class="card" style="padding:10px 12px; display:flex; align-items:center; gap:8px">
+              <input type="checkbox" class="attd" data-id="${st.UserID}" checked>
+              <span>${st.UserID} — ${st.FullName}</span>
+            </label>
+          `).join('')
+        : '<div class="hint">ไม่พบนักเรียนในห้องนี้</div>';
+busy(false);
+    }
+
+    async function saveAttendance(user){
+      const date = $('#dateInput').value;
+const subjVal = $('#subjectSelect').value;
+      if(!date || !subjVal){ alert('กรอกวันที่/เลือกวิชาให้ครบ'); return; }
+
+      let cls = user.class_name;
+if(['teacher','admin'].includes(user.role)){
+        cls = $('#classInput').value.trim();
+        if(!cls){ alert('กรุณากรอก/เลือกห้อง'); return;
+}
+      }
+
+      const [subjectId, subjectName] = subjVal.split('|');
+const checks = $$('.attd');
+      if(!checks.length){ alert('ยังไม่มีรายชื่อให้เช็ค'); return; }
+
+      const records = checks.map(ch => ({
+        studentId: ch.dataset.id,
+        status: ch.checked ? 'Present' : 'Absent'
+      }));
+busy(true,'กำลังบันทึกเช็คชื่อ...');
+      const r = await api('saveAttendanceBulk', {
+        date, subjectId, subjectName, class: cls,
+        records, recorderId: user.user_id
+      });
+busy(false);
+      alert(r.status==='success' ? `บันทึกสำเร็จ ${r.saved} รายการ` : 'บันทึกไม่สำเร็จ');
+    }
+
+    // =================== Boot ===================
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const raw = localStorage.getItem('lms_user');
+      if(!raw){ location.href='index.html'; return; }
+      const user = JSON.parse(raw);
+
+      hydrateHeader(user);
+      if(window.lucide) lucide.createIcons();
+
+      // ค่าเริ่มต้น
+      $('#dateInput').valueAsDate = new Date();
+
+      // ส่วนสิทธิ์เช็คชื่อ
+      showRecordSectionByRole(user);
+      await loadSubjectsForRole(user);
+
+   
+   // โหลดสรุปของฉัน
+      await loadSummary(user);
+
+      // events
+      $('#btnLogout').addEventListener('click', ()=>{
+        busy(true,'กำลังออกจากระบบ...');
+        localStorage.removeItem('lms_user');
+        setTimeout(()=> location.href='index.html', 400);
+      });
+
+      $('#btnLoadStudents').addEventListener('click', ()=> loadStudents(user));
+      $('#btnSaveAttendance').addEventListener('click', ()=> saveAttendance(user));
+      $('#btnBack').onclick=()=>{busy(true,'กำลังกลับไปแดชบอร์ด...');setTimeout(()=>location.href='dashboard.html',300);};
+      
+      // --- ✅ FIX: ลบ 5 บรรทัดข้างล่างนี้ทิ้ง (โค้ดหลงมาจากหน้าอื่น) ---
+      // $('#btnReload').onclick=async()=>cacheRows=await loadSubjects(u);
+      // $('#qInput').oninput=()=>renderRows(cacheRows,u);
+      // $('#btnAdd').onclick=()=>openCreate(u);
+      // $('#btnClose').onclick=closeModal;
+      // $('#modal').onclick=e=>{if(e.target.id==='modal')closeModal();};
+    });
+  </script>
+</body>
+</html>

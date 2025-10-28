@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>จัดการวิชาเรียน — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand" style="align-items:center; gap:10px">
+        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px"><i data-lucide="arrow-left"></i> ย้อนกลับ</button>
+        <div class="logo">
+        
+  <img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo">
+        </div>
+        <div class="title">
+          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <span>จัดการวิชาเรียน</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button 
+id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container grid" style="gap:14px">
+
+    <div class="card">
+      <div class="card-h">
+        <div style="font-weight:900;
+display:flex; align-items:center; gap:8px">
+          <i data-lucide="book"></i> รายวิชาตามระดับชั้น/ห้อง
+        </div>
+        <div class="toolbar">
+          <button id="btnAdd" class="btn" style="display:none"><i data-lucide="plus"></i> เพิ่มวิชา</button>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="auth-col" id="wrapLevel">
+           
+ <label>ระดับชั้น (เช่น ม.5)</label>
+            <input id="levelInput" placeholder="ม.ต้น/ม.ปลาย/ม.4/ม.5 ฯลฯ">
+          </div>
+          <div class="auth-col" id="wrapClass" style="display:none">
+            <label>ห้อง</label>
+            <input id="classInput" placeholder="เช่น ม.5/2">
+          </div>
+          <div class="auth-col">
+           
+ <label>ค้นหา</label>
+            <input id="qInput" placeholder="พิมพ์ชื่อวิชา / ครูผู้สอน">
+          </div>
+          <div class="auth-col">
+            <label>&nbsp;</label>
+            <button id="btnReload" class="btn mini"><i data-lucide="refresh-cw"></i> โหลดใหม่</button>
+          </div>
+        </div>
+        <div class="hint mini" style="margin-top:8px">
+    
+      * นักเรียน/หัวหน้าห้อง: จะเห็นเฉพาะวิชาของห้องตนเอง • ครูที่ปรึกษา/ผู้ดูแลระบบ: เลือกห้องเพื่อดู/แก้ไขได้ทุกวิชา
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <div class="hint mini">หน่วยกิตต่อสัปดาห์ใช้คำนวณเวลาเรียน (เกณฑ์ 80%)</div>
+      </div>
+      <div class="card-b">
+        <div class="table-wrap"><table>
+          <thead>
+         
+   <tr>
+              <th style="width:120px">รหัสวิชา</th>
+              <th>ชื่อวิชา</th>
+              <th>ครูผู้สอน</th>
+              <th class="number" style="width:120px">หน่วยกิต/สัปดาห์</th>
+              <th style="width:120px">ระดับชั้น</th>
+              <th style="width:120px">ห้อง</th>
+        
+      <th style="width:110px">สถานะ</th>
+              <th style="width:150px" id="thTools">เครื่องมือ</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="8" style="text-align:center;
+color:#999">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b>
+  </footer>
+
+  <div id="busy" class="busy">
+    <div class="box">
+      <div class="spinner"></div>
+      <div id="busyMsg">กำลังประมวลผล...</div>
+    </div>
+  </div>
+
+  <div id="modal" class="modal">
+    <div class="panel">
+     
+ <div class="panel-h">
+        <div style="font-weight:900; display:flex; align-items:center;
+gap:8px">
+          <i data-lucide="book-plus"></i> <span id="formTitle">เพิ่มวิชา</span>
+        </div>
+        <button id="btnClose" class="btn mini secondary">ปิด</button>
+      </div>
+      <div class="panel-b">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="auth-col">
+            <label>รหัสวิชา</label>
+            <input id="fSubjectID" placeholder="เช่น MATH501">
+      
+    </div>
+          <div class="auth-col">
+            <label>ชื่อวิชา</label>
+            <input id="fSubjectName" placeholder="เช่น คณิตศาสตร์เพิ่มเติม 5">
+          </div>
+          <div class="auth-col">
+            <label>ระดับชั้น (ClassLevel)</label>
+            <input id="fLevel" placeholder="เช่น ม.5">
+        
+  </div>
+          <div class="auth-col">
+            <label>ห้อง (Class)</label>
+            <input id="fClass" placeholder="เช่น ม.5/2">
+          </div>
+          <div class="auth-col">
+            <label>หน่วยกิต/สัปดาห์ (CreditPerWeek)</label>
+            <input id="fCredit" type="number" min="0" step="0.5" placeholder="เช่น 1">
+       
+   </div>
+          <div class="auth-col">
+            <label>ครูผู้สอน</label>
+            <input id="fTeacherName" placeholder="ชื่อครู">
+          </div>
+          <div class="auth-col">
+            <label>รหัสครู (ไม่บังคับ)</label>
+            <input id="fTeacherID" placeholder="ถ้ามี">
+          </div>
+  
+        <div class="auth-col">
+            <label>สถานะ</label>
+            <select id="fActive">
+              <option value="TRUE">ใช้งาน</option>
+              <option value="FALSE">ปิดใช้งาน</option>
+            </select>
+          </div>
+        </div>
+      
+  <div class="toolbar" style="margin-top:10px">
+          <button id="btnSave" class="btn"><i data-lucide="save"></i> บันทึก</button>
+          <button id="btnDelete" class="btn danger" style="display:none"><i data-lucide="trash-2"></i> ลบวิชา</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =================== Config & helpers ===================
+    const APPS_SCRIPT_URL =
+      localStorage.getItem('GAS_ENDPOINT') ||
+'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+
+    const $  = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+function busy(show, msg='กำลังประมวลผล...') {
+      $('#busyMsg').textContent = msg;
+      $('#busy').style.display = show ? 'flex' : 'none';
+}
+
+    async function api(action, payload) {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action, payload })
+      });
+return res.json();
+    }
+
+    function hydrateHeader(user){
+      $('#roleBadge').textContent = (user.role || 'USER').toUpperCase();
+$('#userName').textContent  = user.full_name || '-';
+    }
+
+    function canManage(user){
+      return ['leader','teacher','admin'].includes((user.role||'').toLowerCase());
+}
+
+    function isAdminOrTeacher(user){
+      return ['teacher','admin'].includes((user.role||'').toLowerCase());
+}
+
+    // =================== UI render ===================
+    function renderRows(rows, user){
+      const q = ($('#qInput').value || '').trim().toLowerCase();
+const body = $('#tbody');
+      const manageable = canManage(user);
+
+      const filtered = (rows||[]).filter(r=>{
+        if(!q) return true;
+        const s = (JSON.stringify(r) || '').toLowerCase();
+        return s.includes(q);
+      });
+body.innerHTML = filtered.length ? filtered.map(r=>{
+        const active = String(r.Active||'TRUE').toUpperCase()!=='FALSE';
+        return `
+          <tr>
+            <td class="number">${r.SubjectID||''}</td>
+            <td>${r.SubjectName||''}</td>
+            <td>${r.TeacherName||''}</td>
+            <td class="number">${r.CreditPerWeek||0}</td>
+            <td>${r.ClassLevel||''}</td>
+    
+        <td>${r.Class||''}</td>
+            <td>${active?'<span class="chip">ใช้งาน</span>':'<span class="chip" style="color:#ef4444">ปิด</span>'}</td>
+            <td>
+              ${manageable ? `<button class="btn mini" data-edit="${r.SubjectID||''}"><i data-lucide="pencil"></i> แก้ไข</button>` : '-'}
+            </td>
+          </tr>
+        `;
+      }).join('') : `<tr><td colspan="8" style="text-align:center;color:#999">ไม่พบข้อมูล</td></tr>`;
+// rebind edit buttons
+      if(manageable){
+        $$('#tbody [data-edit]').forEach(btn=>{
+          btn.onclick = () => openEdit(rows.find(x => String(x.SubjectID) === btn.dataset.edit));
+        });
+}
+      if(window.lucide){ lucide.createIcons(); }
+    }
+
+    // =================== Load subjects ===================
+    // --- ✅ FIX: แก้ไข Logic การโหลดข้อมูลทั้งหมด ---
+    async function loadSubjects(user){
+      busy(true,'กำลังโหลดรายวิชา...');
+try{
+        let res;
+        
+        if(isAdminOrTeacher(user)){
+          // ครู/แอดมิน: โหลดตามที่กรอง
+          $('#wrapClass').style.display = 'block';
+          const cls = $('#classInput').value.trim();
+          const level = $('#levelInput').value.trim();
+          
+          // เรียก API ตัวใหม่: getSubjectsAdmin
+          // ( ưu tiênค้นหาด้วยห้องก่อน ถ้าห้องว่าง ค่อยค้นหาด้วยระดับชั้น)
+          res = await api('getSubjectsAdmin', { 
+            class: cls || undefined, 
+            level: !cls ? (level || undefined) : undefined 
+          });
+          
+        }else{
+          // นักเรียน/หัวหน้าห้อง: โหลดเฉพาะห้องตัวเอง
+          $('#wrapClass').style.display = 'none';
+          $('#levelInput').disabled = true; // ล็อกช่องระดับชั้นด้วย
+          res = await api('getSubjectsByClass', { class: user.class_name });
+        }
+
+const list = res.subjects || [];
+
+        // default level input
+        if(!$('#levelInput').value && list.length > 0 && user.class_name){
+          $('#levelInput').value = user.class_name.split('/')[0] || list[0].ClassLevel || '';
+        } else if (!user.class_name && list.length > 0) {
+          $('#levelInput').value = list[0].ClassLevel || '';
+        }
+
+        renderRows(list, user);
+        return list;
+}catch(e){
+        $('#tbody').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444">โหลดไม่สำเร็จ</td></tr>`;
+        return [];
+}finally{
+        busy(false);
+      }
+    }
+
+    // =================== Modal form ===================
+    function openCreate(user){
+      $('#formTitle').textContent = 'เพิ่มวิชา';
+$('#fSubjectID').value = '';
+      $('#fSubjectName').value = '';
+      $('#fLevel').value = $('#levelInput').value || '';
+      $('#fClass').value = isAdminOrTeacher(user) ? ($('#classInput').value||'') : (user.class_name||'');
+$('#fCredit').value = 1;
+      $('#fTeacherName').value = '';
+      $('#fTeacherID').value = '';
+      $('#fActive').value = 'TRUE';
+      $('#btnDelete').style.display = 'none';
+      $('#modal').classList.add('show');
+      if(window.lucide){ lucide.createIcons();
+}
+    }
+
+    function openEdit(row){
+      if(!row) return;
+      $('#formTitle').textContent = 'แก้ไขวิชา';
+$('#fSubjectID').value = row.SubjectID || '';
+      $('#fSubjectName').value = row.SubjectName || '';
+      $('#fLevel').value = row.ClassLevel || '';
+      $('#fClass').value = row.Class || '';
+$('#fCredit').value = row.CreditPerWeek || 1;
+      $('#fTeacherName').value = row.TeacherName || '';
+      $('#fTeacherID').value = row.TeacherID || '';
+      $('#fActive').value = (String(row.Active||'TRUE').toUpperCase()==='FALSE') ?
+'FALSE' : 'TRUE';
+      $('#btnDelete').style.display = 'inline-flex';
+      $('#modal').classList.add('show');
+      if(window.lucide){ lucide.createIcons(); }
+    }
+
+    function closeModal(){ $('#modal').classList.remove('show');
+}
+
+    // =================== Save / Delete (require GAS functions) ===================
+    async function saveSubject(){
+      const payload = {
+        SubjectID:   $('#fSubjectID').value.trim(), // ✅ FIX: Key ต้องตรงกับ GAS
+        SubjectName: $('#fSubjectName').value.trim(),
+        ClassLevel:  $('#fLevel').value.trim(),
+        Class:       $('#fClass').value.trim(),
+        CreditPerWeek: Number($('#fCredit').value || 0),
+        TeacherName: $('#fTeacherName').value.trim(),
+        
+TeacherID:   $('#fTeacherID').value.trim(),
+        Active:      $('#fActive').value
+      };
+if(!payload.SubjectID || !payload.SubjectName || !payload.Class){
+        alert('กรอก รหัสวิชา / ชื่อวิชา / ห้อง ให้ครบ'); return;
+}
+      busy(true,'กำลังบันทึกข้อมูลวิชา...');
+      try{
+        // ถ้ามีอยู่ให้ update, ถ้าไม่มีให้ create (ฝั่ง GAS จะตัดสินใจได้ก็ได้)
+        const act = $('#formTitle').textContent.includes('แก้ไข') ?
+'updateSubject' : 'createSubject';
+        
+        // --- ✅ FIX: เรียก API ที่เราเพิ่มใน code.gs ---
+        const res = await api(act, payload); 
+        
+        if(res.status !== 'success'){
+          alert('บันทึกไม่สำเร็จ: ' + (res.message || 'ไม่ทราบสาเหตุ'));
+return;
+        }
+        closeModal();
+        $('#btnReload').click(); // โหลดใหม่
+      }catch(e){
+        alert('เกิดข้อผิดพลาดในการบันทึก: ' + e.message);
+}finally{
+        busy(false);
+      }
+    }
+
+    async function deleteSubject(){
+      const id = $('#fSubjectID').value.trim();
+if(!id) return;
+      if(!confirm('ยืนยันลบวิชา '+id+' ?')) return;
+      busy(true,'กำลังลบวิชา...');
+      try{
+        // --- ✅ FIX: เรียก API ที่เราเพิ่มใน code.gs ---
+        const res = await api('deleteSubject', { subjectId:id }); 
+if(res.status !== 'success'){
+          alert('ลบไม่สำเร็จ: ' + (res.message || 'ไม่ทราบสาเหตุ')); return;
+}
+        closeModal();
+        $('#btnReload').click(); // โหลดใหม่
+      }catch(e){
+        alert('เกิดข้อผิดพลาดในการลบ: ' + e.message);
+}finally{
+        busy(false);
+      }
+    }
+
+    // =================== Boot ===================
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const raw = localStorage.getItem('lms_user');
+      if(!raw){ location.href='index.html'; return; }
+      const user = JSON.parse(raw);
+
+      hydrateHeader(user);
+      if(window.lucide){ lucide.createIcons(); }
+
+      // สิทธิ์จัดการ (leader/teacher/admin)
+      if(canManage(user)){
+        $('#btnAdd').style.display = 'inline-flex';
+      } else {
+ 
+       // ซ่อนหัวคอลัมน์เครื่องมือ
+        $('#thTools').style.display = 'none';
+      }
+
+      // ค่า default level/class
+      if(!isAdminOrTeacher(user)){
+        $('#wrapClass').style.display = 'none';
+        $('#levelInput').value = (user.class_name||'').split('/')[0] || '';
+        $('#levelInput').disabled = true; // ✅ FIX: ล็อกสำหรับนักเรียน
+      } else {
+        $('#wrapClass').style.display = 'block';
+      }
+
+      // โหลดรายการเริ่มต้น
+      let cacheRows 
+= await loadSubjects(user);
+
+      // events
+      $('#btnLogout').addEventListener('click', ()=>{
+        busy(true,'กำลังออกจากระบบ...');
+localStorage.removeItem('lms_user');
+        setTimeout(()=> location.href='index.html', 400);
+      });
+      
+      // ✅ FIX: เปลี่ยน Event listener ให้สมบูรณ์
+      $('#btnReload').addEventListener('click', async ()=>{
+        cacheRows = await loadSubjects(user);
+      });
+      
+      // (ถ้าพิมพ์ห้อง/ระดับชั้น ให้กด "โหลดใหม่" เอง)
+      // (ถ้าต้องการให้โหลดอัตโนมัติ ให้เพิ่ม .addEventListener('change', ...) ให้ levelInput และ classInput)
+      $('#levelInput').addEventListener('change', async () => {
+         if(isAdminOrTeacher(user)) cacheRows = await loadSubjects(user);
+      });
+      $('#classInput').addEventListener('change', async () => {
+         if(isAdminOrTeacher(user)) cacheRows = await loadSubjects(user);
+      });
+
+$('#qInput').addEventListener('input', ()=>{
+        renderRows(cacheRows, user);
+      });
+
+      $('#btnAdd').addEventListener('click', ()=> openCreate(user));
+$('#btnClose').addEventListener('click', closeModal);
+      $('#modal').addEventListener('click', (e)=>{ if(e.target.id==='modal') closeModal(); });
+      $('#btnSave').addEventListener('click', saveSubject);
+      $('#btnDelete').addEventListener('click', deleteSubject);
+      
+      // ✅ FIX: เพิ่มปุ่ม Back
+      $('#btnBack').onclick=()=>{busy(true,'กำลังกลับไปแดชบอร์ด...');setTimeout(()=>location.href='dashboard.html',300);};
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ข่าวสาร/ประกาศ — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand" style="align-items:center; gap:10px">
+        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
+          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        </button>
+        <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
+        <div class="title">
+          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <span>ข่าวสาร/ประกาศ</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container grid" style="gap:14px">
+    <div class="card">
+      <div class="card-h">
+        <div style="font-weight:900; display:flex; align-items:center; gap:8px">
+          <i data-lucide="megaphone"></i> ข่าวสารและประกาศสำคัญ
+        </div>
+        <div class="toolbar">
+          <button id="btnReload" class="btn mini"><i data-lucide="refresh-cw"></i> โหลดใหม่</button>
+          <button id="btnAdd" class="btn mini" style="display:none"><i data-lucide="plus"></i> ประกาศข่าว</button>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="auth-col">
+            <label>ค้นหา</label>
+            <input id="qInput" placeholder="พิมพ์หัวข้อ / รายละเอียด">
+          </div>
+          <div class="auth-col">
+            <label>&nbsp;</label>
+            <div class="chip">แสดงจากล่าสุดก่อน</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <div class="hint mini">ประกาศสำหรับนักเรียนและผู้ปกครอง</div>
+      </div>
+      <div class="card-b">
+        <div class="table-wrap"><table>
+          <thead>
+            <tr>
+              <th style="width:120px">วันที่ประกาศ</th>
+              <th>หัวข้อข่าวสาร</th>
+              <th>รายละเอียด</th>
+              <th style="width:100px">เอกสาร/ลิงก์</th>
+              <th style="width:120px">ผู้ประกาศ</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="5" style="text-align:center;color:#999">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b></footer>
+
+  <div id="busy" class="busy"><div class="box"><div class="spinner"></div><div id="busyMsg">กำลังประมวลผล...</div></div></div>
+
+  <div id="modal" class="modal">
+    <div class="panel">
+      <div class="panel-h">
+        <div style="font-weight:900; display:flex; align-items:center; gap:8px"><i data-lucide="file-plus"></i> เพิ่มข่าวสาร</div>
+        <button id="btnClose" class="btn mini secondary">ปิด</button>
+      </div>
+      <div class="panel-b">
+        <div class="grid">
+          <div class="auth-col"><label>หัวข้อข่าวสาร</label><input id="fTitle" placeholder="เช่น แจ้งกำหนดการรับเกียรติบัตร"></div>
+          <div class="auth-col"><label>รายละเอียด</label><input id="fDetail" placeholder="ข้อมูลสรุปสั้นๆ"></div>
+          <div class="auth-col"><label>ลิงก์เอกสาร/เพิ่มเติม</label><input id="fLink" placeholder="URL Google Drive/ลิงก์อื่น ๆ"></div>
+        </div>
+        <div class="toolbar" style="margin-top:10px">
+          <button id="btnSave" class="btn"><i data-lucide="save"></i> บันทึก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Config & helpers =====
+    const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') ||
+      'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+    const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+    const busy=(s,m='กำลังประมวลผล...')=>{ $('#busyMsg').textContent=m; $('#busy').style.display=s?'flex':'none'; };
+    async function api(a,p){ const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,payload:p})}); return r.json(); }
+    const canManage=u=>['teacher','admin'].includes((u.role||'').toLowerCase()); // เฉพาะครู/แอดมินเท่านั้นที่ลงได้
+    const hydrateHeader=u=>{ $('#roleBadge').textContent=(u.role||'USER').toUpperCase(); $('#userName').textContent=u.full_name||'-'; };
+    
+    // --- State ---
+    let _cache = [];
+    
+    // ===== UI Builders =====
+    function renderRows(list){
+      const q = ($('#qInput').value||'').toLowerCase();
+      
+      const rows = (list||[]).filter(x=>{
+        const s = (x.Title+' '+x.Detail+' '+x.PostedBy).toLowerCase();
+        return !q || s.includes(q);
+      });
+
+      $('#tbody').innerHTML = rows.length ? rows.map(x=>`
+        <tr>
+          <td style="font-weight:800">${x.Date||'-'}</td>
+          <td>${x.Title||'-'}</td>
+          <td>${x.Detail||'-'}</td>
+          <td>${x.Link?`<a class="chip" target="_blank" href="${x.Link}">เปิดลิงก์</a>`:'-'}</td>
+          <td>${x.PostedBy||'-'}</td>
+        </tr>
+      `).join('') : `<tr><td colspan="5" style="text-align:center;color:#999">ไม่พบข่าวสาร</td></tr>`;
+    }
+
+    // ===== Data Loader =====
+    async function loadNews(user){
+      busy(true,'กำลังโหลดข่าวสาร...');
+      try{
+        const r = await api('listNews', {});
+        const list = r.news || [];
+        _cache = list;
+        renderRows(list);
+        return list;
+      }catch(e){
+        console.error(e);
+        $('#tbody').innerHTML=`<tr><td colspan="5" style="text-align:center;color:#ef4444">โหลดไม่สำเร็จ</td></tr>`;
+        return [];
+      }finally{ busy(false); }
+    }
+
+    // ===== Modal Save =====
+    function openModal(){ 
+      $('#fTitle').value = '';
+      $('#fDetail').value = '';
+      $('#fLink').value = '';
+      $('#modal').classList.add('show'); 
+    }
+    function closeModal(){ $('#modal').classList.remove('show'); }
+    
+    async function saveNews(user){
+      const title = $('#fTitle').value.trim();
+      
+      if(!title){ alert('กรอก หัวข้อข่าวสาร ให้ครบ'); return; }
+
+      const payload = {
+        title, 
+        detail: $('#fDetail').value.trim(),
+        link: $('#fLink').value.trim(),
+        postedBy: user.full_name || user.user_id
+      };
+
+      busy(true,'กำลังประกาศข่าว...');
+      const r = await api('postNews', payload);
+      busy(false);
+      
+      if(r.status==='success'){ 
+        closeModal();
+        alert('ประกาศสำเร็จ');
+        await loadNews(user); 
+      }
+      else alert('ประกาศไม่สำเร็จ: ' + (r.message || 'ไม่ทราบสาเหตุ'));
+    }
+
+    // ===== Boot =====
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const raw=localStorage.getItem('lms_user'); if(!raw){location.href='index.html';return;}
+      const user=JSON.parse(raw);
+      hydrateHeader(user);
+      if(window.lucide) lucide.createIcons();
+      
+      // UI ตามบทบาท
+      if(canManage(user)){
+        $('#btnAdd').style.display='inline-flex';
+      }
+
+      await loadNews(user);
+      
+      // events
+      $('#btnBack').onclick=()=>{ busy(true,'กลับไปแดชบอร์ด...'); setTimeout(()=>location.href='dashboard.html',300); };
+      $('#btnLogout').onclick=()=>{ busy(true,'ออกจากระบบ...'); localStorage.removeItem('lms_user'); setTimeout(()=>location.href='index.html',300); };
+      $('#btnReload').onclick=async()=>{ await loadNews(user); };
+      
+      $('#qInput').addEventListener('input', ()=> renderRows(_cache));
+
+      $('#btnAdd').onclick=()=>openModal();
+      $('#btnClose').onclick=closeModal;
+      $('#modal').onclick=e=>{ if(e.target.id==='modal') closeModal(); };
+      $('#btnSave').onclick=()=>saveNews(user);
+    });
+  </script>
+</body>
+</html>

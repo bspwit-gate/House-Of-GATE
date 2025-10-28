@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>การบ้าน — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand" style="align-items:center; gap:10px">
+        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
+          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        </button>
+ 
+       <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
+        <div class="title">
+          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <span>การบ้าน</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button id="btnLogout" class="btn 
+mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container grid" style="gap:14px">
+    <div class="card">
+      <div class="card-h">
+        <div style="font-weight:900;
+display:flex; align-items:center; gap:8px">
+          <i data-lucide="clipboard-list"></i> รายการการบ้านของห้อง
+        </div>
+        <div class="toolbar">
+          <button id="btnReload" class="btn mini"><i data-lucide="refresh-cw"></i> โหลดใหม่</button>
+          <button id="btnAdd" class="btn mini" style="display:none"><i data-lucide="plus"></i> เพิ่มการบ้าน</button>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+       
+   <div class="auth-col" id="wrapClass" style="display:none">
+            <label>ห้อง</label>
+            <input id="classInput" placeholder="เช่น ม.5/2">
+          </div>
+          <div class="auth-col">
+            <label>วิชา</label>
+            <select id="subjectSelect"><option value="">-- ทุกวิชา --</option></select>
+          </div>
+        
+  <div class="auth-col">
+            <label>ค้นหา</label>
+            <input id="qInput" placeholder="พิมพ์ชื่อเรื่อง / รายละเอียด">
+          </div>
+          <div class="auth-col">
+            <label>&nbsp;</label>
+            <div class="chip">แสดงจากใกล้กำหนดส่งก่อน</div>
+          </div>
+        </div>
+     
+ </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <div class="hint mini">หัวหน้าห้องเป็นผู้ลงบันทึกการบ้าน • นักเรียนดูรายการและกำหนดส่ง</div>
+      </div>
+      <div class="card-b">
+        <div class="table-wrap"><table id="hwTable">
+          <thead>
+            <tr>
+              <th style="width:120px">วันที่สั่ง</th>
+     
+         <th>ชื่อเรื่อง</th>
+              <th>วิชา</th>
+              <th>รายละเอียด</th>
+              <th style="width:140px">กำหนดส่ง</th>
+              <th style="width:100px">คงเหลือ</th>
+              <th style="width:80px">ไฟล์</th>
+            </tr>
+      
+    </thead>
+          <tbody id="tbody">
+            <tr><td colspan="7" style="text-align:center;color:#999">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b></footer>
+
+  <div id="busy" class="busy"><div class="box"><div class="spinner"></div><div id="busyMsg">กำลังประมวลผล...</div></div></div>
+
+  <div id="modal" class="modal">
+    <div class="panel">
+    
+  <div class="panel-h">
+        <div style="font-weight:900; display:flex; align-items:center;
+gap:8px"><i data-lucide="plus-square"></i> เพิ่มการบ้าน</div>
+        <button id="btnClose" class="btn mini secondary">ปิด</button>
+      </div>
+      <div class="panel-b">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="auth-col"><label>วันที่สั่ง</label><input id="fAssignDate" type="date"></div>
+          <div class="auth-col"><label>วิชา</label><select id="fSubject"></select></div>
+          <div class="auth-col"><label>ชื่อเรื่อง</label><input id="fTitle" placeholder="เช่น แบบฝึกหัดหน้า 25 ข้อ 1-10"></div>
+          <div class="auth-col"><label>กำหนดส่ง</label><input id="fDueDate" type="date"></div>
+        
+  <div class="auth-col" style="grid-column:1 / -1"><label>รายละเอียด</label><input id="fDetail" placeholder="คำอธิบาย/แนวทางการทำ"></div>
+          <div class="auth-col" style="grid-column:1 / -1"><label>ลิงก์ไฟล์แนบ (ถ้ามี)</label><input id="fAttach" placeholder="URL Google Drive/ลิงก์อื่น ๆ"></div>
+        </div>
+        <div class="toolbar" style="margin-top:10px">
+          <button id="btnSave" class="btn"><i data-lucide="save"></i> บันทึก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Config & Helpers =====
+    const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') ||
+'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+    const $=s=>document.querySelector(s);
+const fmtDMY=(v)=>{ const d=new Date(v); return isNaN(d)?'':`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; };const daysBetween=(a,b)=>{ const A=new Date(a),B=new Date(b); return Math.round((B-A)/(1000*60*60*24)); };
+const $$=s=>Array.from(document.querySelectorAll(s));
+    const busy=(s,m='กำลังประมวลผล...')=>{ $('#busyMsg').textContent=m; $('#busy').style.display=s?'flex':'none'; };
+    async function api(a,p){ const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,payload:p})}); return r.json();
+}
+    const canManage=u=>['leader','teacher','admin'].includes((u.role||'').toLowerCase());
+    const isAdminOrTeacher=u=>['teacher','admin'].includes((u.role||'').toLowerCase());
+    const hydrateHeader=u=>{ $('#roleBadge').textContent=(u.role||'USER').toUpperCase(); $('#userName').textContent=u.full_name||'-'; };
+// ===== Subjects =====
+    function renderSubjectSelect(list, selectEl, includeAll=true){
+      selectEl.innerHTML = (includeAll?'<option value="">-- ทุกวิชา --</option>':'') +
+        (list||[]).map(s=>`<option value="${s.SubjectID}|${s.SubjectName}|${s.CreditPerWeek||0}">${s.SubjectName}</option>`).join('');
+}
+    async function loadSubjectsForRole(user){
+      if(isAdminOrTeacher(user)){
+        $('#wrapClass').style.display='block';
+$('#classInput').addEventListener('change', async ()=>{
+          const cls = $('#classInput').value.trim(); if(!cls) return;
+          const res = await api('getSubjectsByClass',{class:cls});
+          renderSubjectSelect(res.subjects||[], $('#subjectSelect'), true);
+          renderSubjectSelect(res.subjects||[], $('#fSubject'), false);
+        });
+} else {
+        const res = await api('getSubjectsByClass',{class:user.class_name});
+        renderSubjectSelect(res.subjects||[], $('#subjectSelect'), true);
+renderSubjectSelect(res.subjects||[], $('#fSubject'), false);
+      }
+    }
+
+    // ===== Homework List =====
+    function daysLeftStr(due){
+      if(!due) return '-';
+const D = (s)=>new Date(s+'T00:00:00');
+      const diff = Math.ceil((D(due)-D(new Date().toISOString().slice(0,10)))/86400000);
+      if(diff > 0) return diff+' วัน';
+if(diff === 0) return 'วันนี้';
+      return 'เกินกำหนด '+Math.abs(diff)+' วัน';
+    }
+    function renderRows(list){
+      const q = ($('#qInput').value||'').toLowerCase();
+const sub = $('#subjectSelect').value.split('|')[0]||'';
+      const rows = (list||[]).filter(r=>{
+        const okSub = !sub || String(r.SubjectID)===String(sub);
+        const s = (r.Title+' '+r.Detail+' '+r.SubjectName).toLowerCase();
+        return okSub && (!q || s.includes(q));
+      });
+$('#tbody').innerHTML = rows.length ? rows.map(r=>`
+        <tr>
+          <td>${r.AssignDate||''}</td>
+          <td style="font-weight:800">${r.Title||''}</td>
+          <td>${r.SubjectName||''}</td>
+          <td>${r.Detail||''}</td>
+          <td class="number">${r.DueDate||''}</td>
+          <td>${daysLeftStr(r.DueDate)}</td>
+          <td>
+            ${r.AttachmentLink?`<a class="chip" href="${r.AttachmentLink}" target="_blank">เปิด</a>`:'-'}
+ 
+         </td>
+        </tr>
+      `).join('') : `<tr><td colspan="7" style="text-align:center;color:#999">ไม่พบข้อมูล</td></tr>`;
+}
+    async function loadHomework(user){
+      busy(true,'กำลังโหลดการบ้าน...');
+try{
+        let cls = user.class_name;
+        if(isAdminOrTeacher(user)){ const v=$('#classInput').value.trim(); if(v) cls=v;
+}
+        const subId = $('#subjectSelect').value.split('|')[0]||'';
+const res = await api('listHomeworkByClass',{class:cls, subjectId: subId || undefined});
+        const list = res.homework || [];
+// เรียงกำหนดส่งใกล้สุดก่อน (GAS เรียงแล้ว แต่กันไว้)
+        list.sort((a,b)=>(new Date(a.DueDate||'2100-01-01'))-(new Date(b.DueDate||'2100-01-01')));
+        renderRows(list);
+        return list;
+}catch(e){
+        $('#tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ef4444">โหลดไม่สำเร็จ</td></tr>`;
+        return [];
+      }finally{ busy(false);
+}
+    }
+
+    // ===== Modal =====
+    function openModal(){ $('#modal').classList.add('show');
+}
+    function closeModal(){ $('#modal').classList.remove('show'); }
+    async function saveHomework(user){
+      const subj = $('#fSubject').value.split('|');
+if(!subj[0]){ alert('เลือกวิชา'); return; }
+      let cls = user.class_name;
+      if(isAdminOrTeacher(user)){ const v=$('#classInput').value.trim(); if(!v){ alert('กรอกห้อง'); return;
+} cls=v; }
+      const payload = {
+        assignDate: $('#fAssignDate').value ||
+new Date().toISOString().slice(0,10),
+        subjectId: subj[0], subjectName: subj[1]||'',
+        class: cls,
+        title: $('#fTitle').value.trim(),
+        detail: $('#fDetail').value.trim(),
+        dueDate: $('#fDueDate').value,
+        attachmentLink: $('#fAttach').value.trim(),
+        assignedBy: user.user_id
+      };
+if(!payload.title || !payload.dueDate){ alert('กรอกชื่อเรื่องและกำหนดส่ง'); return; }
+      busy(true,'กำลังบันทึกการบ้าน...');
+      const r = await api('postHomework', payload);
+      busy(false);
+if(r.status==='success'){ closeModal(); $('#btnReload').click(); }
+      else alert('บันทึกไม่สำเร็จ');
+}
+
+    // ===== Boot =====
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const raw = localStorage.getItem('lms_user'); if(!raw){ location.href='index.html'; return; }
+      const user = JSON.parse(raw);
+      hydrateHeader(user);
+      if(window.lucide) lucide.createIcons();
+
+      // defaults
+      $('#fAssignDate').valueAsDate = new Date();
+      $('#fDueDate').valueAsDate = new Date(Date.now()+86400000*7); // +7 วัน
+
+      // role UI
+      if(canManage(user)) $('#btnAdd').style.display='inline-flex';
+      if(isAdminOrTeacher(user)) $('#wrapClass').style.display='block';
+
+  
+    // data
+      await loadSubjectsForRole(user);
+      let cache = await loadHomework(user);
+
+      // events
+      $('#btnBack').onclick=()=>{ busy(true,'กลับไปแดชบอร์ด...'); setTimeout(()=>location.href='dashboard.html',300); };
+      $('#btnLogout').onclick=()=>{ busy(true,'ออกจากระบบ...'); localStorage.removeItem('lms_user'); setTimeout(()=>location.href='index.html',300);
+};
+      $('#btnReload').onclick=async()=>{ cache = await loadHomework(user); };
+      $('#subjectSelect').onchange=()=>renderRows(cache);
+      $('#qInput').oninput=()=>renderRows(cache);
+
+      $('#btnAdd').onclick=()=>openModal();
+      $('#btnClose').onclick=closeModal;
+      $('#modal').onclick=e=>{ if(e.target.id==='modal') closeModal(); };
+      $('#btnSave').onclick=()=>saveHomework(user);
+if(isAdminOrTeacher(user)){
+        $('#classInput').addEventListener('change', async ()=>{
+          // ✅ FIX: ไม่ต้อง await loadSubjectsForRole(user) ซ้ำ
+          // (เพราะมันถูก bind event ไว้แล้วใน loadSubjectsForRole)
+          cache = await loadHomework(user);
+        });
+}
+    });
+  </script>
+</body>

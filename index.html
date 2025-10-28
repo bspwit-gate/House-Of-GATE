@@ -1,0 +1,100 @@
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ชื่อหน้า</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo">
+          <img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo">
+        </div>
+        <div class="title">
+          <h1>GATE LMS</h1>
+          <span>ระบบจัดการเรียนการสอน</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span class="role">LOGIN</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="login-wrap">
+      <div class="auth-card2">
+        <div class="head">
+          <div class="logo">
+            <img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png">
+          </div>
+          <h2>เข้าสู่ระบบ</h2>
+          <p class="sub">กรอกเลขประจำตัวและรหัสผ่าน</p>
+        </div>
+
+        <div class="auth-row">
+          <div class="auth-col">
+            <label>เลขประจำตัว</label>
+            <input id="username" type="text" inputmode="numeric" placeholder="เช่น 65001">
+          </div>
+          <div class="auth-col">
+            <label>รหัสผ่าน</label>
+            <input id="password" type="password" placeholder="••••••">
+          </div>
+          <div class="form-note">ติดต่อผู้ดูแลระบบ หากไม่สามารถเข้าสู่ระบบได้</div>
+          <div class="auth-col" style="grid-column:1 / -1">
+            <button id="loginBtn" class="btn big">เข้าสู่ระบบ</button>
+            <p id="loginError" class="hint" style="display:none;margin-top:8px;color:#ef4444;font-weight:800">
+              ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b>
+  </footer>
+
+  <div id="busy" class="busy">
+    <div class="box"><div class="spinner"></div><div id="busyMsg">กำลังตรวจสอบข้อมูล...</div></div>
+  </div>
+
+  <script>
+    
+    const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') || 'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+    const $ = id => document.getElementById(id);
+    const busy = (show,msg='กำลังประมวลผล...')=>{
+      document.getElementById('busyMsg').textContent = msg;
+      document.getElementById('busy').style.display = show?'flex':'none';
+    };
+    async function login(){
+      const username = $('username').value.trim();
+      const password = $('password').value;
+      if(!username||!password){ const e=$('loginError'); e.style.display='block'; e.textContent='กรุณากรอกข้อมูลให้ครบ'; return; }
+      $('loginError').style.display='none';
+      busy(true,'กำลังตรวจสอบข้อมูล...');
+      try{
+        const r = await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'loginUser',payload:{username,password}})});
+        const j = await r.json();
+        if(j.status==='success'){
+          localStorage.setItem('lms_user', JSON.stringify(j.user));
+          busy(true,'เข้าสู่ระบบสำเร็จ'); setTimeout(()=>location.href='dashboard.html',600);
+        }else{
+          const e=$('loginError'); e.style.display='block'; e.textContent=j.message||'เข้าสู่ระบบไม่สำเร็จ'; busy(false);
+        }
+      }catch(err){ const e=$('loginError'); e.style.display='block'; e.textContent='ข้อผิดพลาดการเชื่อมต่อ'; busy(false); }
+    }
+    document.addEventListener('DOMContentLoaded', ()=>{
+      if(localStorage.getItem('lms_user')){ location.href='dashboard.html'; return; }
+      $('loginBtn').addEventListener('click', login);
+      $('password').addEventListener('keydown', e=>{ if(e.key==='Enter') login(); });
+    });
+  </script>
+</body>

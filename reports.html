@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>รายงานสรุป — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand" style="align-items:center; gap:10px">
+        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
+          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        </button>
+ 
+       <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
+        <div class="title">
+          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <span>รายงานสรุป</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button id="btnLogout" class="btn 
+mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container grid" style="gap:14px">
+    <div class="card">
+      <div class="card-h">
+        <div style="font-weight:900;
+display:flex; align-items:center; gap:8px">
+          <i data-lucide="bar-chart-3"></i> รายงานภาพรวมตามห้องเรียน
+        </div>
+        <div class="toolbar">
+          <button id="btnReload" class="btn mini"><i data-lucide="refresh-cw"></i> โหลดใหม่</button>
+          <button id="btnExport" class="btn mini"><i data-lucide="download"></i> ส่งออก CSV</button>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+       
+   <div class="auth-col" id="wrapClass">
+            <label>ห้องเรียน</label>
+            <input id="classInput" placeholder="เช่น ม.5/2">
+          </div>
+          <div class="auth-col">
+            <label>&nbsp;</label>
+            <button id="btnLoad" class="btn">แสดงรายงาน</button>
+          </div>
+          <div 
+class="auth-col">
+            <label>&nbsp;</label>
+            <div class="chip">เกณฑ์ผ่าน 80% ของ (หน่วยกิต/สัปดาห์ × 20 สัปดาห์)</div>
+          </div>
+          <div class="auth-col">
+            <label>ค้นหาในตาราง</label>
+            <input id="qInput" placeholder="พิมพ์ชื่อวิชาเพื่อกรองตาราง">
+          </div>
+        </div>
+    
+    <div id="debugUrl" class="hint mini" style="margin-top:6px; word-break:break-all"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <div class="hint mini">สรุปภาพรวมของห้อง</div>
+      </div>
+      <div class="card-b">
+        <div class="stat" id="statBoxes"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+  
+      <div style="font-weight:900">สถานะรวมตามรายวิชา</div>
+      </div>
+      <div class="card-b">
+        <div id="errBox" class="hint mini" style="display:none;
+color:#ef4444; font-weight:800"></div>
+        <table>
+          <thead>
+            <tr>
+              <th>วิชา</th>
+              <th class="number">หน่วยกิต/สัปดาห์</th>
+              <th class="number">จำนวนนักเรียน</th>
+              <th class="number">ต้องเข้าเรียนทั้งหมด*</th>
+          
+    <th class="number">เข้าเรียน (บันทึก)</th>
+              <th class="number">% รวมชั้นเรียน</th>
+              <th>สถานะ</th>
+              <th style="width:220px">ความคืบหน้า</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="8" style="text-align:center;color:#999">กรอกห้องและกด "แสดงรายงาน"</td></tr>
+ 
+         </tbody>
+        </table>
+        <p class="hint mini" style="margin-top:8px">* ต้องเข้าเรียนทั้งหมด = หน่วยกิต/สัปดาห์ × 20 สัปดาห์ × จำนวนนักเรียน</p>
+      </div>
+    </div>
+  
+  <div class="card">
+    <div class="card-h"><div class="badge info"><i data-lucide="users"></i> ภาพรวมตามห้องเรียน (ความเสี่ยงการเข้าเรียน)</div></div>
+    <div class="card-b"><div id="riskList" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+gap:12px"></div></div>
+  </div>
+</main>
+
+  <footer>พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b></footer>
+
+  <div id="busy" class="busy">
+    <div class="box"><div class="spinner"></div><div id="busyMsg">กำลังโหลด...</div></div>
+  </div>
+
+  <script>
+    // ===== Config & Helpers =====
+    const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') ||
+      'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+    const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+    const busy=(s,m='กำลังโหลด...')=>{ $('#busyMsg').textContent=m; $('#busy').style.display=s?'flex':'none'; };
+    async function api(a,p){
+      const body={action:a,payload:p};
+      const res = await fetch(APPS_SCRIPT_URL,{
+      
+  method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify(body)
+      });
+const txt = await res.text();
+      try{ return JSON.parse(txt); }catch(e){
+        console.error('Invalid JSON from GAS:', txt);
+throw new Error('API ตอบกลับไม่ใช่ JSON (เช็ค Deployment URL/สิทธิ์การเข้าถึง)');
+      }
+    }
+    const hydrateHeader=u=>{ $('#roleBadge').textContent=(u.role||'USER').toUpperCase(); $('#userName').textContent=u.full_name||'-';
+};
+    const isAdminOrTeacher=u=>['teacher','admin'].includes((u.role||'').toLowerCase());
+
+    let _cache = { cls:'', rows:[] };
+// ===== UI Builders =====
+    function N(x){ const n=Number(x); return Number.isFinite(n)?n:0;
+}
+
+    function statBox(label, value, sub=''){
+      return `
+        <div class="box">
+          <div class="hint mini" style="font-weight:800">${label}</div>
+          <div class="val">${value}</div>
+          ${sub?`<div class="mini" style="opacity:.8">${sub}</div>`:''}
+        </div>
+      `;
+}
+
+    function percentStatus(pct){
+      if(!Number.isFinite(pct)) return {text:'-', color:'', ok:false};
+if(pct >= 80) return {text:'ผ่าน', color:'color:#22c55e', ok:true};
+      if(pct >= 60) return {text:'เสี่ยง', color:'color:#f59e0b', ok:false};
+      return {text:'ไม่ผ่าน', color:'color:#ef4444', ok:false};
+}
+
+    function renderStats(report){
+      const nSub = (report.subjects||[]).length;
+      const nHW  = N(report.homeworkCount);
+const nEX  = N(report.examsCount);
+
+      let avgPct = null, cnt = 0;
+(report.subjects||[]).forEach(s=>{
+        const agg = (report.attendanceAgg||{})[s.SubjectID];
+        const credit = N(s.CreditPerWeek);
+        const required = credit * 20 * N(agg?.totalStudents);
+        const present  = N(agg?.present);
+        if(required>0){
+          const pct = Math.min(100, Math.round((present/required)*100));
+          avgPct = (avgPct??0) + pct; cnt++;
+        }
+      
+});
+      if(cnt>0) avgPct = Math.round(avgPct/cnt);
+
+      $('#statBoxes').innerHTML = `
+        ${statBox('จำนวนวิชา', nSub)}
+        ${statBox('จำนวนการบ้านทั้งหมด', nHW)}
+        ${statBox('จำนวนการนัดสอบทั้งหมด', nEX)}
+      ` + (avgPct!=null ? statBox('เฉลี่ย % การเข้าเรียนรวม', avgPct+'%', percentStatus(avgPct).text) : '');
+}
+
+    function rowForSubject(s, agg){
+      const credit = N(s.CreditPerWeek);
+      const students = N(agg?.totalStudents);
+const required = credit * 20 * students;
+      const present  = N(agg?.present);
+      const pct = required>0 ?
+Math.min(100, Math.round((present/required)*100)) : 0;
+      const st = percentStatus(pct);
+      return {
+        SubjectName: s.SubjectName||'-',
+        CreditPerWeek: credit,
+        TotalStudents: students,
+        RequiredAll: required,
+        PresentCount: present,
+        Percent: pct,
+        Status: st.text
+      };
+}
+
+    function renderTableRows(rows){
+      const q = ($('#qInput').value||'').toLowerCase();
+const data = rows.filter(r => !q || (r.SubjectName||'').toLowerCase().includes(q));
+      $('#tbody').innerHTML = data.length ?
+data.map(r=>{
+        const pass = percentStatus(r.Percent);
+        return `
+          <tr>
+            <td>${r.SubjectName}</td>
+            <td class="number">${r.CreditPerWeek}</td>
+            <td class="number">${r.TotalStudents}</td>
+            <td class="number">${r.RequiredAll}</td>
+            <td class="number">${r.PresentCount}</td>
+      
+      <td class="number">${r.Percent}%</td>
+            <td><span class="chip" style="${pass.color}">${pass.text}</span></td>
+            <td><div class="gauge"><div style="width:${r.Percent}%"></div></div></td>
+          </tr>
+        `;
+      }).join('') : `<tr><td colspan="8" style="text-align:center;color:#999">ไม่พบข้อมูล</td></tr>`;
+}
+
+    // --- ✅ FIX: ย้ายฟังก์ชัน มารวมในสคริปต์หลัก ---
+    async function loadRiskOverview(cls){
+      const box=$('#riskList');
+      if(!cls) {
+        box.innerHTML = '<div class="hint mini">กรุณาเลือกห้องเพื่อดูความเสี่ยง</div>';
+        return;
+      }
+      box.innerHTML = '<div class="hint mini">กำลังโหลดข้อมูลความเสี่ยง...</div>';
+      
+      const r = await api('attendanceRiskByClass',{ class: cls });
+if(!box||r.status!=='success') {
+        box.innerHTML = '<div class="hint mini" style="color:#ef4444">โหลดข้อมูลความเสี่ยงไม่สำเร็จ</div>';
+        return;
+      }
+      
+      box.innerHTML=(r.list||[]).map(p=>{
+        const icon=p.status==='fail'?'alert-octagon':(p.status==='risk'?'alert-triangle':'check-circle');
+        const icc=p.status==='fail'?'icon-fail':(p.status==='risk'?'icon-risk':'icon-ok');
+        return `<div class="card" style="border:1px dashed #ffd4b6">
+          <div class="card-b" style="display:flex; gap:10px; align-items:center">
+            <i data-lucide="${icon}" class="${icc}"></i>
+            <div><div style="font-weight:900">${p.fullName}</div><div style="font-size:13px; opacity:.8">ต่ำสุด: ${p.minPercent}%</div></div>
+          </div>
+        </div>`;
+      }).join('');
+if(window.lucide) lucide.createIcons();
+    }
+    
+    function toCSV(rows){
+      const header = ['SubjectName','CreditPerWeek','TotalStudents','RequiredAll','PresentCount','Percent','Status'];
+const esc = v=>('"'+String(v??'').replace(/"/g,'""')+'"');
+      const lines = [header.join(',')].concat(rows.map(r=>header.map(h=>esc(r[h])).join(',')));
+      return lines.join('\r\n');
+    }
+    function download(filename, text){
+      const blob = new Blob([text], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ===== Data Loader =====
+    async function loadReport(cls){
+      $('#errBox').style.display='none';
+     
+ busy(true, 'กำลังโหลดรายงาน...');
+      try{
+        // --- ✅ FIX: เรียก loadRiskOverview พร้อมกัน ---
+        await loadRiskOverview(cls); 
+        
+        const r = await api('reportSummary', { class: cls });
+        console.log('reportSummary response:', r);
+        if(r.status!=='success'){
+          $('#errBox').style.display='block';
+          $('#errBox').textContent = 'โหลดรายงานไม่สำเร็จ: ' + (r.message||'ไม่ทราบสาเหตุ');
+          $('#tbody').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444">โหลดรายงานไม่สำเร็จ</td></tr>`;
+$('#statBoxes').innerHTML = '';
+          return;
+        }
+        // cache
+        _cache.cls = cls;
+const rows = (r.subjects||[]).map(s=>rowForSubject(s, (r.attendanceAgg||{})[s.SubjectID]));
+        _cache.rows = rows;
+
+        renderStats(r);
+        renderTableRows(rows);
+      }catch(e){
+        console.error(e);
+        $('#errBox').style.display='block';
+$('#errBox').textContent = 'โหลดรายงานไม่สำเร็จ (ตรวจ URL Deployment/สิทธิ์การเข้าถึง Apps Script)';
+        $('#tbody').innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444">โหลดรายงานไม่สำเร็จ</td></tr>`;
+        $('#statBoxes').innerHTML = '';
+}finally{
+        busy(false);
+      }
+    }
+
+    // ===== Boot =====
+    document.addEventListener('DOMContentLoaded', ()=>{
+      // auth
+      const raw = localStorage.getItem('lms_user'); if(!raw){ location.href='index.html'; return; }
+      const user = JSON.parse(raw);
+      hydrateHeader(user);
+      if(window.lucide) lucide.createIcons();
+
+      // โชว์ URL ที่กำลังเรียก (ให้ดีบั๊กง่าย)
+      $('#debugUrl').textContent = 'API: ' + APPS_SCRIPT_URL;
+
+      // auto-fill ห้องของนักเรียน
+    
+  if(!isAdminOrTeacher(user)) $('#classInput').value = user.class_name || '';
+
+      // events
+      $('#btnBack').onclick=()=>{ busy(true,'กลับไปแดชบอร์ด...'); setTimeout(()=>location.href='dashboard.html',300); };
+      $('#btnLogout').onclick=()=>{ busy(true,'ออกจากระบบ...'); localStorage.removeItem('lms_user'); setTimeout(()=>location.href='index.html',300); };
+      $('#btnLoad').onclick=()=>{ const cls=$('#classInput').value.trim(); if(!cls){ alert('กรอกห้องเรียน'); return; } loadReport(cls); };
+      $('#btnReload').onclick=()=>{ if(_cache.cls){ loadReport(_cache.cls);
+} };
+      $('#qInput').oninput=()=>{ renderTableRows(_cache.rows||[]); };
+      $('#btnExport').onclick=()=>{ if(!_cache.rows?.length){ alert('ยังไม่มีข้อมูลให้ส่งออก'); return; } download(`report_${_cache.cls||'class'}.csv`, toCSV(_cache.rows)); };
+// ถ้ามีห้องแล้ว ให้ auto-load
+      const initClass = $('#classInput').value.trim();
+      if(initClass) loadReport(initClass);
+    });
+  </script>
+</body>

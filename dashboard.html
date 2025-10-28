@@ -1,0 +1,170 @@
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>แดชบอร์ด — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo">
+          <img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo">
+        </div>
+        <div class="title">
+          <h1>House of GATE</h1>
+          <span>แดชบอร์ด</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="tiles" class="tiles"></div>
+  </main>
+
+  <footer>
+    พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b>
+  </footer>
+
+  <div id="busy" class="busy">
+    <div class="box">
+      <div class="spinner"></div>
+      <div id="busyMsg">กำลังโหลด...</div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- helpers ----------
+    const $ = s => document.querySelector(s);
+    function busy(show, msg = 'กำลังโหลด...') {
+      $('#busyMsg').textContent = msg;
+      $('#busy').style.display = show ? 'flex' : 'none';
+    }
+
+    // ---------- icons & menus ----------
+    const ICONS = {
+      attendance: 'check-circle', homework: 'clipboard-list', exam: 'graduation-cap',
+      lesson: 'book-open', issues: 'alert-triangle', users: 'users',
+      subjects: 'book', reports: 'bar-chart-3',
+      // ✅ NEW ICONS
+      gooddeeds: 'star', news: 'megaphone', calendar: 'calendar',
+      mou: 'handshake', contact: 'users'
+    };
+
+    const MENUS = {
+      student: [
+        { key: 'news',       title: 'ข่าวสาร/ประกาศ',    desc: 'ข่าวสารและประกาศจากโครงการ',      href: 'news.html' },
+        { key: 'calendar',   title: 'ปฏิทินกิจกรรม',     desc: 'ตารางนัดหมายและกิจกรรม GATE',      href: 'calendar.html' },
+        { key: 'attendance', title: 'บันทึกการเข้าเรียน', desc: 'รายงานเวลาเรียนและเช็คชื่อรายวิชา', href: 'attendance.html' },
+        { key: 'homework',   title: 'บันทึกการบ้าน',     desc: 'รายการงานที่ต้องส่งและกำหนดส่ง',   href: 'homework.html' },
+        { key: 'exam',       title: 'บันทึกนัดสอบ',       desc: 'ดูตารางสอบและหัวข้อที่ออกสอบ',     href: 'exam.html' },
+        { key: 'lesson',     title: 'บันทึกการเรียน',     desc: 'ดูหัวข้อที่เรียนในแต่ละวัน',        href: 'lesson-log.html' },
+        { key: 'gooddeeds',  title: 'บันทึกเด็กดี',       desc: 'ดูบันทึกความดี/คะแนนพิเศษที่ได้รับ', href: 'good-deeds.html' },
+        { key: 'contact',    title: 'ติดต่อครูประจำชั้น',  desc: 'ข้อมูลติดต่อครูที่ปรึกษา',          href: 'contact-teacher.html' },
+        { key: 'mou',        title: 'ข้อมูลโครงการ/MOU',  desc: 'รายละเอียดโครงการและข้อตกลง',       href: 'mou.html' },
+        { key: 'issues',     title: 'แจ้งปัญหา',           desc: 'รายงานปัญหาให้ผู้ดูแลระบบช่วยแก้', href: 'issues.html' },
+      ],
+      leader: [
+        { key: 'news',       title: 'ข่าวสาร/ประกาศ',    desc: 'ข่าวสารและประกาศจากโครงการ',      href: 'news.html' },
+        { key: 'calendar',   title: 'ปฏิทินกิจกรรม',     desc: 'ตารางนัดหมายและกิจกรรม GATE',      href: 'calendar.html' },
+        { key: 'attendance', title: 'บันทึก/ลงเวลาเรียน',  desc: 'เช็คชื่อทั้งห้องแบบรายวัน',           href: 'attendance.html' },
+        { key: 'homework',   title: 'บันทึกการบ้าน (ห้อง)', desc: 'บันทึกการบ้านและกำหนดส่งของห้อง',    href: 'homework.html' },
+        { key: 'exam',       title: 'บันทึกนัดสอบ (ห้อง)', desc: 'เพิ่มนัดสอบให้ทั้งห้อง',               href: 'exam.html' },
+        { key: 'lesson',     title: 'บันทึกการเรียน',     desc: 'ดูหัวข้อที่เรียนในแต่ละวัน',            href: 'lesson-log.html' },
+        { key: 'gooddeeds',  title: 'บันทึกเด็กดี',       desc: 'ลงบันทึก/ดูบันทึกความดี/คะแนนพิเศษ',  href: 'good-deeds.html' },
+        { key: 'contact',    title: 'ติดต่อครูประจำชั้น',  desc: 'ข้อมูลติดต่อครูที่ปรึกษา',          href: 'contact-teacher.html' },
+        { key: 'mou',        title: 'ข้อมูลโครงการ/MOU',  desc: 'รายละเอียดโครงการและข้อตกลง',       href: 'mou.html' },
+        { key: 'issues',     title: 'แจ้งปัญหา',           desc: 'รายงานปัญหาให้ผู้ดูแลระบบช่วยแก้',     href: 'issues.html' },
+      ],
+      teacher: [
+        { key: 'news',       title: 'จัดการข่าวสาร',      desc: 'ประกาศข่าวสารให้ระบบ',             href: 'news.html' },
+        { key: 'calendar',   title: 'จัดการปฏิทิน',      desc: 'ลงบันทึกปฏิทินกิจกรรม',            href: 'calendar.html' },
+        { key: 'attendance', title: 'ลงเวลาเรียน',         desc: 'เช็คชื่อรายวิชาที่สอน',                 href: 'attendance.html' },
+        { key: 'homework',   title: 'ลงบันทึกการบ้าน',     desc: 'ประกาศการบ้านและติดตามการส่ง',         href: 'homework.html' },
+        { key: 'exam',       title: 'ลงบันทึกนัดสอบ',      desc: 'ประกาศตารางสอบ',                        href: 'exam.html' },
+        { key: 'lesson',     title: 'บันทึกการเรียน',     desc: 'หัวข้อสอน/สื่อการสอน',                   href: 'lesson-log.html' },
+        { key: 'gooddeeds',  title: 'บันทึกเด็กดี',       desc: 'ลงบันทึก/ดูบันทึกความดี/คะแนนพิเศษ',  href: 'good-deeds.html' },
+        { key: 'reports',    title: 'รายงานสรุป',          desc: 'สรุปการเข้าเรียน การบ้าน และสอบ',        href: 'reports.html' },
+        { key: 'issues',     title: 'แจ้งปัญหา',           desc: 'รายงานปัญหาการใช้งาน',                  href: 'issues.html' },
+      ],
+      admin: [
+        { key: 'news',       title: 'จัดการข่าวสาร',      desc: 'ประกาศข่าวสารให้ระบบ',             href: 'news.html' },
+        { key: 'calendar',   title: 'จัดการปฏิทิน',      desc: 'ลงบันทึกปฏิทินกิจกรรม',            href: 'calendar.html' },
+        { key: 'attendance', title: 'จัดการการเข้าเรียน',   desc: 'ดู/ปรับปรุงข้อมูลเช็คชื่อ',             href: 'attendance.html' },
+        { key: 'homework',   title: 'การบ้าน',              desc: 'ดู/ประกาศ/ติดตามการบ้าน',               href: 'homework.html' },
+        { key: 'exam',       title: 'นัดสอบ',               desc: 'ดู/ประกาศตารางสอบ',                      href: 'exam.html' },
+        { key: 'lesson',     title: 'บันทึกการเรียน',      desc: 'หัวข้อการเรียน/การสอน',                  href: 'lesson-log.html' },
+        { key: 'gooddeeds',  title: 'บันทึกเด็กดี',       desc: 'ลงบันทึก/ดูบันทึกความดี/คะแนนพิเศษ',  href: 'good-deeds.html' },
+        { key: 'issues',     title: 'จัดการปัญหา',          desc: 'ตั้งผู้รับผิดชอบและสถานะปัญหา',           href: 'issues.html' },
+        { key: 'users',      title: 'จัดการผู้ใช้',         desc: 'เพิ่ม ลบ แก้ไขข้อมูลผู้ใช้',              href: 'users.html' },
+        { key: 'subjects',   title: 'จัดการวิชาเรียน',      desc: 'เพิ่มวิชาและหน่วยกิต/สัปดาห์',          href: 'subjects.html' },
+        { key: 'reports',    title: 'รายงานสรุป',           desc: 'รวมสถิติและ Export',                     href: 'reports.html' },
+      ]
+    };
+
+    // ---------- render ----------
+    const tiles = document.getElementById('tiles');
+
+    function tileTemplate(m){
+      const icon = ICONS[m.key] || 'square';
+      return `
+        <div class="tile" data-href="${m.href}" aria-label="${m.title}">
+          <i data-lucide="${icon}" class="ico"></i>
+          <div class="t-title">${m.title}</div>
+          <div class="t-sub">${m.desc}</div>
+        </div>`;
+    }
+
+    function render(role){
+      const list = MENUS[role] || MENUS.student;
+      tiles.innerHTML = list.map(tileTemplate).join('');
+      if(window.lucide){
+        // ใช้สีส้มหลักและขนาดที่เหมาะสมกับดีไซน์ V3
+        lucide.createIcons({attrs:{width:38,height:38,stroke:'#ff7a18','stroke-width':2}});
+      }
+      tiles.querySelectorAll('.tile').forEach(el=>{
+        el.addEventListener('click', ()=>{
+          busy(true,'กำลังเปิดหน้า...');
+          setTimeout(()=> location.href = el.dataset.href, 250);
+        });
+        el.addEventListener('keydown', (e)=>{
+          if(e.key==='Enter' || e.key===' '){ el.click(); }
+        });
+        el.tabIndex = 0;
+        el.setAttribute('role','button');
+      });
+    }
+
+    function hydrate(user){
+      document.getElementById('roleBadge').textContent = (user.role||'USER').toUpperCase();
+      document.getElementById('userName').textContent = user.full_name || '-';
+    }
+
+    // ---------- boot ----------
+    document.addEventListener('DOMContentLoaded', () => {
+      const raw = localStorage.getItem('lms_user');
+      if (!raw) { location.href = 'index.html'; return; }
+      const u = JSON.parse(raw);
+      hydrate(u);
+      render(u.role || 'student');
+
+      document.getElementById('btnLogout').addEventListener('click', () => {
+        busy(true, 'กำลังออกจากระบบ...');
+        localStorage.removeItem('lms_user');
+        setTimeout(() => location.href = 'index.html', 400);
+      });
+    });
+  </script>
+</body>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>แจ้ง/จัดการปัญหา — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand" style="align-items:center; gap:10px">
+        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
+          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        </button>
+        <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
+        <div class="title">
+          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <span>แจ้ง/จัดการปัญหา</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container grid" style="gap:14px">
+    <div class="card">
+      <div class="card-h">
+        <div style="font-weight:900; display:flex; align-items:center; gap:8px">
+          <i data-lucide="alert-triangle"></i> ระบบแจ้งปัญหา
+        </div>
+        <div class="toolbar">
+          <button id="btnReload" class="btn mini"><i data-lucide="refresh-cw"></i> โหลดใหม่</button>
+          <button id="btnAdd" class="btn mini"><i data-lucide="plus"></i> แจ้งปัญหา</button>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="grid" style="grid-template-columns:repeat(5,1fr)">
+          <div class="auth-col" id="wrapClass" style="display:none">
+            <label>ห้อง (เฉพาะครู/แอดมิน)</label>
+            <input id="classInput" placeholder="เช่น ม.5/2">
+          </div>
+          <div class="auth-col">
+            <label>สถานะ</label>
+            <select id="statusSelect">
+              <option value="">-- ทุกสถานะ --</option>
+              <option value="New">ใหม่</option>
+              <option value="In Progress">กำลังดำเนินการแก้ไข</option>
+              <option value="Resolved">แก้ไขแล้ว</option>
+              <option value="Cannot Fix">แก้ไขไม่ได้</option>
+              <option value="Pending">รอแก้ไข</option>
+            </select>
+          </div>
+          <div class="auth-col">
+            <label>ค้นหา</label>
+            <input id="qInput" placeholder="พิมพ์หัวข้อ/รายละเอียด/ผู้รับผิดชอบ">
+          </div>
+          <div class="auth-col">
+            <label>&nbsp;</label>
+            <div class="chip">แสดงจากล่าสุดก่อน</div>
+          </div>
+          <div class="auth-col">
+            <label>&nbsp;</label>
+            <div id="whoHint" class="hint mini"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><div class="hint mini">ผู้ดูแลระบบสามารถเปลี่ยนสถานะ/มอบหมายผู้รับผิดชอบได้</div></div>
+      <div class="card-b">
+        <div class="table-wrap"><table>
+          <thead>
+            <tr>
+              <th style="width:120px">รหัสปัญหา</th>
+              <th>หัวข้อ</th>
+              <th>รายละเอียด</th>
+              <th style="width:110px">สถานะ</th>
+              <th style="width:120px">ผู้รับผิดชอบ</th>
+              <th style="width:120px">ผู้แจ้ง</th>
+              <th style="width:120px">ห้อง</th>
+              <th style="width:140px">อัปเดตล่าสุด</th>
+              <th style="width:110px">เครื่องมือ</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="9" style="text-align:center;color:#999">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b></footer>
+
+  <div id="busy" class="busy"><div class="box"><div class="spinner"></div><div id="busyMsg">กำลังประมวลผล...</div></div></div>
+
+  <div id="modalCreate" class="modal">
+    <div class="panel">
+      <div class="panel-h">
+        <div style="font-weight:900; display:flex; align-items:center; gap:8px"><i data-lucide="file-warning"></i> แจ้งปัญหาใหม่</div>
+        <button id="btnCloseCreate" class="btn mini secondary">ปิด</button>
+      </div>
+      <div class="panel-b">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="auth-col"><label>ประเภท/หมวด</label><input id="fCategory" placeholder="เช่น ระบบ/บัญชี/ข้อมูล/อื่น ๆ"></div>
+          <div class="auth-col"><label>ห้อง</label><input id="fClass" placeholder="เช่น ม.5/2"></div>
+          <div class="auth-col" style="grid-column:1 / -1"><label>หัวข้อ</label><input id="fTitle" placeholder="หัวข้อปัญหา"></div>
+          <div class="auth-col" style="grid-column:1 / -1"><label>รายละเอียด</label><input id="fDetail" placeholder="เล่าอาการหรือสิ่งที่พบ"></div>
+          <div class="auth-col" style="grid-column:1 / -1"><label>ลิงก์ไฟล์แนบ (ถ้ามี)</label><input id="fAttach" placeholder="URL รูป/ไฟล์"></div>
+        </div>
+        <div class="toolbar" style="margin-top:10px">
+          <button id="btnSaveCreate" class="btn"><i data-lucide="send"></i> ส่งแจ้งปัญหา</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalEdit" class="modal">
+    <div class="panel">
+      <div class="panel-h">
+        <div style="font-weight:900; display:flex; align-items:center; gap:8px"><i data-lucide="settings"></i> จัดการปัญหา</div>
+        <button id="btnCloseEdit" class="btn mini secondary">ปิด</button>
+      </div>
+      <div class="panel-b">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="auth-col"><label>รหัสปัญหา</label><input id="eIssueID" disabled></div>
+          <div class="auth-col"><label>สถานะ</label>
+            <select id="eStatus">
+              <option>New</option>
+              <option>In Progress</option>
+              <option>Resolved</option>
+              <option>Cannot Fix</option>
+              <option>Pending</option>
+            </select>
+          </div>
+          <div class="auth-col"><label>ผู้รับผิดชอบ</label><input id="eAssignee" placeholder="ชื่อ/รหัสผู้รับผิดชอบ"></div>
+          <div class="auth-col" style="grid-column:1 / -1"><label>บันทึกการแก้ไข</label><input id="eNote" placeholder="สรุปการแก้หรือเหตุผล"></div>
+        </div>
+        <div class="toolbar" style="margin-top:10px">
+          <button id="btnSaveEdit" class="btn"><i data-lucide="save"></i> บันทึก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Config & helpers =====
+    const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') ||
+      'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+    const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+    const busy=(s,m='กำลังประมวลผล...')=>{ $('#busyMsg').textContent=m; $('#busy').style.display=s?'flex':'none'; };
+    async function api(a,p){ const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,payload:p})}); return r.json(); }
+    const hydrateHeader=u=>{ $('#roleBadge').textContent=(u.role||'USER').toUpperCase(); $('#userName').textContent=u.full_name||'-'; };
+    const isAdmin=u=>(u.role||'').toLowerCase()==='admin';
+    const isTeacher=u=>(u.role||'').toLowerCase()==='teacher';
+
+    // ===== List issues =====
+    function statusChip(s){
+      const map={New:'', 'In Progress':'color:#f59e0b', Resolved:'color:#22c55e', 'Cannot Fix':'color:#ef4444', Pending:'color:#a16207'};
+      return `<span class="chip" style="${map[s]||''}">${s||'-'}</span>`;
+    }
+    function renderRows(list, user){
+      const q = ($('#qInput').value||'').toLowerCase();
+      const st = $('#statusSelect').value || '';
+      const rows = (list||[]).filter(x=>{
+        const okS = !st || String(x.Status)===String(st);
+        const s = (x.Title+' '+x.Detail+' '+x.Assignee).toLowerCase();
+        return okS && (!q || s.includes(q));
+      });
+      $('#tbody').innerHTML = rows.length ? rows.map(x=>`
+        <tr>
+          <td class="number">${x.IssueID||''}</td>
+          <td style="font-weight:800">${x.Title||''}</td>
+          <td><span class="cell-clip">${x.Detail||""}</span></td>
+          <td>${statusChip(x.Status||'New')}</td>
+          <td>${x.Assignee||'-'}</td>
+          <td>${x.CreatedBy||'-'}</td>
+          <td>${x.Class||'-'}</td>
+          <td class="number">${(x.UpdatedAt||x.Timestamp||'').toString().slice(0,19).replace('T',' ')}</td>
+          <td>${isAdmin(user)?`<button class="btn mini" data-edit="${x.IssueID}"><i data-lucide="pencil"></i> แก้ไข</button>`:'-'}</td>
+        </tr>
+      `).join('') : `<tr><td colspan="9" style="text-align:center;color:#999">ไม่พบข้อมูล</td></tr>`;
+
+      if(isAdmin(user)){
+        $$('#tbody [data-edit]').forEach(b=>{
+          b.onclick=()=>{
+            const row = list.find(v=>String(v.IssueID)===String(b.dataset.edit));
+            if(!row) return;
+            $('#eIssueID').value=row.IssueID||'';
+            $('#eStatus').value=row.Status||'New';
+            $('#eAssignee').value=row.Assignee||'';
+            $('#eNote').value='';
+            $('#modalEdit').classList.add('show');
+            if(window.lucide) lucide.createIcons();
+          };
+        });
+      }
+      if(window.lucide) lucide.createIcons();
+    }
+
+    async function loadIssues(user){
+      busy(true,'กำลังโหลดรายการปัญหา...');
+      try{
+        const payload = {};
+        // ถ้า teacher/admin และระบุห้อง → filter ตามห้อง
+        if(isTeacher(user) || isAdmin(user)){
+          $('#wrapClass').style.display='block';
+          const cls = $('#classInput').value.trim();
+          if(cls) payload.class = cls;
+        } else {
+          // นักเรียน/หัวหน้าห้อง → ดูของห้องตัวเอง
+          payload.class = user.class_name;
+        }
+        const st = $('#statusSelect').value; if(st) payload.status = st;
+        const r = await api('listIssues', payload);
+        const list = r.issues || [];
+        renderRows(list, user);
+        return list;
+      }catch(e){
+        $('#tbody').innerHTML = `<tr><td colspan="9" style="text-align:center;color:#ef4444">โหลดไม่สำเร็จ</td></tr>`;
+        return [];
+      }finally{ busy(false); }
+    }
+
+    // ===== Create issue =====
+    function openCreate(user){
+      $('#fClass').value = (isTeacher(user)||isAdmin(user)) ? ($('#classInput').value||'') : (user.class_name||'');
+      $('#fCategory').value=''; $('#fTitle').value=''; $('#fDetail').value=''; $('#fAttach').value='';
+      $('#modalCreate').classList.add('show');
+      if(window.lucide) lucide.createIcons();
+    }
+    function closeCreate(){ $('#modalCreate').classList.remove('show'); }
+    async function saveCreate(user){
+      const payload = {
+        createdBy: user.user_id, role: user.role, class: $('#fClass').value.trim(),
+        category: $('#fCategory').value.trim(), title: $('#fTitle').value.trim(), detail: $('#fDetail').value.trim(),
+        attachmentLink: $('#fAttach').value.trim()
+      };
+      if(!payload.class || !payload.title){ alert('กรอก ห้อง และ หัวข้อ'); return; }
+      busy(true,'กำลังส่งแจ้งปัญหา...');
+      const r = await api('createIssue', payload);
+      busy(false);
+      if(r.status==='success'){ closeCreate(); $('#btnReload').click(); }
+      else alert('ส่งไม่สำเร็จ');
+    }
+
+    // ===== Edit (Admin) =====
+    function closeEdit(){ $('#modalEdit').classList.remove('show'); }
+    async function saveEdit(){
+      const payload = {
+        issueId: $('#eIssueID').value,
+        status: $('#eStatus').value,
+        assignee: $('#eAssignee').value.trim(),
+        resolutionNote: $('#eNote').value.trim()
+      };
+      if(!payload.issueId){ alert('ไม่มีรหัสปัญหา'); return; }
+      busy(true,'กำลังบันทึกสถานะ...');
+      const r = await api('updateIssueStatus', payload);
+      busy(false);
+      if(r.status==='success'){ closeEdit(); $('#btnReload').click(); }
+      else alert('บันทึกไม่สำเร็จ');
+    }
+
+    // ===== Boot =====
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const raw=localStorage.getItem('lms_user'); if(!raw){location.href='index.html';return;}
+      const user=JSON.parse(raw);
+      hydrateHeader(user);
+      if(window.lucide) lucide.createIcons();
+
+      $('#whoHint').textContent = isAdmin(user) ? 'สิทธิ์: ผู้ดูแลระบบ' : (isTeacher(user) ? 'สิทธิ์: ครูที่ปรึกษา' : 'สิทธิ์: ผู้ใช้ทั่วไป');
+
+      let cache = await loadIssues(user);
+
+      // events
+      $('#btnBack').onclick=()=>{ busy(true,'กลับไปแดชบอร์ด...'); setTimeout(()=>location.href='dashboard.html',300); };
+      $('#btnLogout').onclick=()=>{ busy(true,'ออกจากระบบ...'); localStorage.removeItem('lms_user'); setTimeout(()=>location.href='index.html',300); };
+
+      $('#btnReload').onclick=async()=>{ cache = await loadIssues(user); };
+      $('#statusSelect').onchange=async()=>{ cache = await loadIssues(user); };
+      $('#qInput').oninput=()=>renderRows(cache, user);
+
+      $('#btnAdd').onclick=()=>openCreate(user);
+      $('#btnCloseCreate').onclick=closeCreate;
+      $('#modalCreate').onclick=e=>{ if(e.target.id==='modalCreate') closeCreate(); };
+      $('#btnSaveCreate').onclick=()=>saveCreate(user);
+
+      $('#btnCloseEdit').onclick=closeEdit;
+      $('#modalEdit').onclick=e=>{ if(e.target.id==='modalEdit') closeEdit(); };
+      $('#btnSaveEdit').onclick=saveEdit;
+
+      if(isTeacher(user) || isAdmin(user)){
+        $('#wrapClass').style.display='block';
+        $('#classInput').addEventListener('change', async ()=>{ cache = await loadIssues(user); });
+      }
+    });
+  </script>
+</body>
+</html>

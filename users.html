@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>จัดการผู้ใช้ — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand" style="align-items:center; gap:10px">
+        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
+          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        </button>
+        <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
+        <div class="title">
+          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <span>จัดการผู้ใช้</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container grid" style="gap:14px">
+    <div class="card">
+      <div class="card-h">
+        <div style="font-weight:900; display:flex; align-items:center; gap:8px">
+          <i data-lucide="users"></i> รายชื่อผู้ใช้ทั้งหมด
+        </div>
+        <div class="toolbar">
+          <button id="btnReload" class="btn mini"><i data-lucide="refresh-cw"></i> โหลดใหม่</button>
+          <button id="btnAdd" class="btn mini"><i data-lucide="plus"></i> เพิ่มผู้ใช้</button>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="auth-col"><label>ค้นหา</label><input id="qInput" placeholder="พิมพ์ชื่อ/รหัส/ห้อง/บทบาท"></div>
+          <div class="auth-col"><label>บทบาท</label>
+            <select id="roleSelect">
+              <option value="">-- ทุกบทบาท --</option>
+              <option value="student">นักเรียน</option>
+              <option value="leader">หัวหน้าห้อง</option>
+              <option value="teacher">ครู</option>
+              <option value="admin">ผู้ดูแลระบบ</option>
+            </select>
+          </div>
+          <div class="auth-col"><label>&nbsp;</label><div class="chip">เพิ่ม/แก้ไข/ลบ เชื่อมชีต Users โดยตรง</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><div class="hint mini">โครง Users: UserID, Password, FullName, Class, Role, Active, ProfileURL</div></div>
+      <div class="card-b">
+        <table>
+          <thead>
+            <tr>
+              <th>รหัส</th>
+              <th>ชื่อ-สกุล</th>
+              <th>ห้อง</th>
+              <th>บทบาท</th>
+              <th>สถานะ</th>
+              <th style="width:200px">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="6" style="text-align:center;color:#999">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer>พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b></footer>
+
+  <div id="busy" class="busy"><div class="box"><div class="spinner"></div><div id="busyMsg">กำลังโหลด...</div></div></div>
+
+  <div id="modalUser" class="modal">
+    <div class="panel">
+      <div class="panel-h">
+        <div style="font-weight:900; display:flex; align-items:center; gap:8px"><i data-lucide="user-plus"></i> จัดการผู้ใช้</div>
+        <div class="toolbar">
+          <button id="btnDelete" class="btn danger mini" style="display:none"><i data-lucide="trash-2"></i> ลบผู้ใช้</button>
+          <button id="btnClose" class="btn mini secondary">ปิด</button>
+        </div>
+      </div>
+      <div class="panel-b">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="auth-col"><label>รหัสผู้ใช้ (UserID)</label><input id="uID" placeholder="เช่น 12345"></div>
+          <div class="auth-col"><label>รหัสผ่าน</label><input id="uPass" placeholder="Password"></div>
+          <div class="auth-col"><label>ชื่อ-สกุล</label><input id="uName" placeholder="Full name"></div>
+          <div class="auth-col"><label>ห้อง</label><input id="uClass" placeholder="เช่น ม.5/2"></div>
+          <div class="auth-col"><label>บทบาท</label>
+            <select id="uRole">
+              <option value="student">นักเรียน</option>
+              <option value="leader">หัวหน้าห้อง</option>
+              <option value="teacher">ครู</option>
+              <option value="admin">ผู้ดูแลระบบ</option>
+            </select>
+          </div>
+          <div class="auth-col"><label>สถานะ</label>
+            <select id="uActive">
+              <option value="TRUE">เปิดใช้งาน</option>
+              <option value="FALSE">ปิดการใช้งาน</option>
+            </select>
+          </div>
+          <div class="auth-col" style="grid-column:1 / -1"><label>ลิงก์รูปโปรไฟล์ (ถ้ามี)</label><input id="uProfile" placeholder="URL รูปภาพ"></div>
+        </div>
+        <div class="toolbar" style="margin-top:10px">
+          <button id="btnSave" class="btn"><i data-lucide="save"></i> บันทึก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== Config & helpers ======
+    const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') ||
+      'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+    const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+    const busy=(s,m='กำลังโหลด...')=>{ $('#busyMsg').textContent=m; $('#busy').style.display=s?'flex':'none'; };
+    async function api(a,p){ const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,payload:p})}); return r.json(); }
+    const hydrateHeader=u=>{ $('#roleBadge').textContent=(u.role||'USER').toUpperCase(); $('#userName').textContent=u.full_name||'-'; };
+    const isAdmin=u=>(u.role||'').toLowerCase()==='admin';
+
+    // ====== UI ======
+    function renderRows(list){
+      const q=($('#qInput').value||'').toLowerCase();
+      const role=$('#roleSelect').value;
+      const rows=(list||[]).filter(x=>{
+        const okRole=!role||String(x.Role).toLowerCase()===role;
+        const s=(x.FullName+' '+x.UserID+' '+x.Class+' '+x.Role).toLowerCase();
+        return okRole&&(!q||s.includes(q));
+      });
+      $('#tbody').innerHTML=rows.length?rows.map(x=>`
+        <tr>
+          <td>${x.UserID||''}</td>
+          <td>${x.FullName||''}</td>
+          <td>${x.Class||''}</td>
+          <td>${x.Role||''}</td>
+          <td>${String(x.Active).toUpperCase()==='FALSE'?'ปิด':'เปิด'}</td>
+          <td>
+            <div class="toolbar">
+              <button class="btn mini" data-edit="${x.UserID}"><i data-lucide="pencil"></i> แก้ไข</button>
+            </div>
+          </td>
+        </tr>
+      `).join(''):`<tr><td colspan="6" style="text-align:center;color:#999">ไม่พบข้อมูล</td></tr>`;
+      if(window.lucide) lucide.createIcons();
+      $$('#tbody [data-edit]').forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));
+    }
+
+    async function loadUsers(){
+      busy(true,'กำลังโหลดผู้ใช้...');
+      try{
+        const res=await api('getUsers',{});
+        window._users=res.users||[];
+        renderRows(window._users);
+      }catch(e){
+        $('#tbody').innerHTML='<tr><td colspan="6" style="text-align:center;color:#ef4444">โหลดไม่สำเร็จ</td></tr>';
+      }finally{ busy(false); }
+    }
+
+    // ====== Modal ======
+    function openCreate(){
+      $('#uID').disabled=false;
+      $('#uID').value=''; $('#uPass').value=''; $('#uName').value=''; $('#uClass').value='';
+      $('#uRole').value='student'; $('#uActive').value='TRUE'; $('#uProfile').value='';
+      $('#btnDelete').style.display='none';
+      $('#modalUser').classList.add('show');
+    }
+    function openEdit(id){
+      const u=(window._users||[]).find(x=>String(x.UserID)===String(id));
+      if(!u) return;
+      $('#uID').disabled=true;
+      $('#uID').value=u.UserID||''; $('#uPass').value=u.Password||'';
+      $('#uName').value=u.FullName||''; $('#uClass').value=u.Class||'';
+      $('#uRole').value=(u.Role||'student'); $('#uActive').value=(String(u.Active).toUpperCase()==='FALSE'?'FALSE':'TRUE');
+      $('#uProfile').value=u.ProfileURL||'';
+      $('#btnDelete').style.display='inline-flex';
+      $('#modalUser').classList.add('show');
+    }
+    function closeModal(){ $('#modalUser').classList.remove('show'); }
+
+    async function saveUser(){
+      const user = {
+        UserID: $('#uID').value.trim(),
+        Password: $('#uPass').value.trim(),
+        FullName: $('#uName').value.trim(),
+        Class: $('#uClass').value.trim(),
+        Role: $('#uRole').value,
+        Active: $('#uActive').value,
+        ProfileURL: $('#uProfile').value.trim()
+      };
+      if(!user.UserID || !user.FullName){ alert('กรอก รหัสผู้ใช้ และ ชื่อ-สกุล'); return; }
+      busy(true,'กำลังบันทึกผู้ใช้...');
+      const r = await api('upsertUser', { user });
+      busy(false);
+      if(r.status==='success'){ closeModal(); await loadUsers(); }
+      else alert('บันทึกไม่สำเร็จ: '+(r.message||'unknown'));
+    }
+
+    async function deleteUser(){
+      const id = $('#uID').value.trim(); if(!id){ alert('ไม่มีรหัสผู้ใช้'); return; }
+      if(!confirm('ยืนยันการลบผู้ใช้ '+id+' ?')) return;
+      busy(true,'กำลังลบผู้ใช้...');
+      const r = await api('deleteUser', { userId: id });
+      busy(false);
+      if(r.status==='success'){ closeModal(); await loadUsers(); }
+      else alert('ลบไม่สำเร็จ: '+(r.message||'unknown'));
+    }
+
+    // ====== Boot ======
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const raw=localStorage.getItem('lms_user'); if(!raw){location.href='index.html';return;}
+      const me=JSON.parse(raw);
+      if((me.role||'').toLowerCase()!=='admin'){ alert('หน้าเฉพาะผู้ดูแลระบบ'); location.href='dashboard.html'; return; }
+      hydrateHeader(me);
+      if(window.lucide) lucide.createIcons();
+
+      loadUsers();
+
+      $('#btnBack').onclick=()=>{ busy(true,'กลับไปแดชบอร์ด...'); setTimeout(()=>location.href='dashboard.html',300); };
+      $('#btnLogout').onclick=()=>{ busy(true,'ออกจากระบบ...'); localStorage.removeItem('lms_user'); setTimeout(()=>location.href='index.html',300); };
+      $('#btnReload').onclick=loadUsers;
+
+      $('#qInput').oninput=()=>renderRows(window._users||[]);
+      $('#roleSelect').onchange=()=>renderRows(window._users||[]);
+
+      $('#btnAdd').onclick=openCreate;
+      $('#btnClose').onclick=closeModal;
+      $('#modalUser').onclick=e=>{ if(e.target.id==='modalUser') closeModal(); };
+      $('#btnSave').onclick=saveUser;
+      $('#btnDelete').onclick=deleteUser;
+    });
+  </script>
+</body>

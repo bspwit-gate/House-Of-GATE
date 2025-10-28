@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ติดต่อครูประจำชั้น — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand" style="align-items:center; gap:10px">
+        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
+          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        </button>
+        <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
+        <div class="title">
+          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <span>ติดต่อครูประจำชั้น</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div class="card-h">
+        <div style="font-weight:900; display:flex; align-items:center; gap:8px">
+          <i data-lucide="users"></i> ข้อมูลติดต่อครูประจำชั้น/ที่ปรึกษา (ห้อง <span id="classDisplay">-</span>)
+        </div>
+      </div>
+      <div class="card-b">
+        <div id="teacherInfo" class="grid" style="grid-template-columns:1fr; gap:16px">
+          <div style="text-align:center; color:#999">กำลังค้นหาข้อมูล...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b></footer>
+
+  <div id="busy" class="busy"><div class="box"><div class="spinner"></div><div id="busyMsg">กำลังโหลด...</div></div></div>
+
+  <script>
+    // ===== Config & helpers =====
+    const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') ||
+      'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+    const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+    const busy=(s,m='กำลังโหลด...')=>{ $('#busyMsg').textContent=m; $('#busy').style.display=s?'flex':'none'; };
+    async function api(a,p){ const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,payload:p})}); return r.json(); }
+    const hydrateHeader=u=>{ $('#roleBadge').textContent=(u.role||'USER').toUpperCase(); $('#userName').textContent=u.full_name||'-'; };
+
+    // ===== UI Builders =====
+    function renderTeacherCard(t){
+      const defaultPic = 'https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png';
+      $('#teacherInfo').innerHTML = `
+        <div class="card" style="max-width:400px; margin:auto; text-align:center; padding:20px; border:1px solid #ffe3d0;">
+          <img src="${t.profile || defaultPic}" alt="${t.name}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin-bottom:10px; border:3px solid #ff7a18">
+          <div style="font-size:1.4rem; font-weight:900; color:#ff7a18">${t.name}</div>
+          <div style="font-size:1rem; color:#1f2937">${t.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ครูประจำชั้น'} (ห้อง ${t.class})</div>
+          <div class="hint mini" style="margin-top:10px">รหัส: ${t.id}</div>
+          <div style="margin-top:10px;">
+            <a href="mailto:email@example.com" class="btn mini secondary" style="margin:4px"><i data-lucide="mail"></i> ส่งอีเมล</a>
+            <a href="tel:081xxxxxxx" class="btn mini" style="margin:4px"><i data-lucide="phone"></i> โทรศัพท์</a>
+            </div>
+        </div>
+      `;
+      if(window.lucide) lucide.createIcons();
+    }
+
+    // ===== Data Loader =====
+    async function loadTeacher(user){
+      busy(true,'กำลังค้นหาครูประจำชั้น...');
+      const userClass = user.class_name;
+      $('#classDisplay').textContent = userClass || '-';
+      
+      if(!userClass) {
+        $('#teacherInfo').innerHTML = `<div class="hint mini" style="color:#ef4444; text-align:center">ไม่พบข้อมูลห้องเรียนของคุณ</div>`;
+        busy(false);
+        return;
+      }
+      
+      try{
+        const r = await api('getClassTeacher', { class: userClass });
+        
+        if(r.status === 'success' && r.teacher){
+          renderTeacherCard(r.teacher);
+        } else {
+          $('#teacherInfo').innerHTML = `<div class="hint mini" style="color:#f59e0b; text-align:center">${r.message || 'ไม่พบครูประจำชั้นที่ผูกกับห้องนี้'}</div>`;
+        }
+      }catch(e){
+        console.error(e);
+        $('#teacherInfo').innerHTML=`<div class="hint mini" style="color:#ef4444; text-align:center">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>`;
+      }finally{ busy(false); }
+    }
+
+    // ===== Boot =====
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const raw=localStorage.getItem('lms_user'); if(!raw){location.href='index.html';return;}
+      const user=JSON.parse(raw);
+      hydrateHeader(user);
+      if(window.lucide) lucide.createIcons();
+      
+      await loadTeacher(user);
+
+      $('#btnBack').onclick=()=>{ busy(true,'กลับไปแดชบอร์ด...'); setTimeout(()=>location.href='dashboard.html',300); };
+      $('#btnLogout').onclick=()=>{ busy(true,'ออกจากระบบ...'); localStorage.removeItem('lms_user'); setTimeout(()=>location.href='index.html',300); };
+    });
+  </script>
+</body>
+</html>

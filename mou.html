@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ข้อมูลโครงการ/MOU — LMS</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="orange-kit.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand" style="align-items:center; gap:10px">
+        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
+          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        </button>
+        <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
+        <div class="title">
+          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <span>ข้อมูลโครงการ/MOU</span>
+        </div>
+      </div>
+      <div class="who">
+        <span class="dot"></span>
+        <span id="roleBadge" class="role">ROLE</span>
+        <span id="userName">ชื่อ-สกุล</span>
+        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div class="card-h">
+        <div style="font-weight:900; display:flex; align-items:center; gap:8px">
+          <i data-lucide="handshake"></i> ข้อมูลโครงการ GATE และข้อตกลง (MOU)
+        </div>
+      </div>
+      <div class="card-b" style="max-width:800px; margin:auto">
+        <p class="hint mini" style="font-weight:800; color:#ff7a18">หน้านี้เป็นข้อมูลอ่านอย่างเดียว (Static Content) หากต้องการเปลี่ยนแปลงโปรดแก้ไขไฟล์ HTML โดยตรง</p>
+        
+        <h2 style="font-size:1.5rem; font-weight:900; margin-top:16px; color:#22c55e">โครงการ GATE คืออะไร?</h2>
+        <p>โครงการ Gifted and Talented Education (GATE) มุ่งเน้นการส่งเสริมศักยภาพนักเรียนที่มีความสามารถพิเศษในด้านต่างๆ เพื่อให้พวกเขาได้รับการพัฒนาอย่างเต็มที่ตามความถนัดและความสนใจ</p>
+
+        <h2 style="font-size:1.5rem; font-weight:900; margin-top:24px; color:#ff7a18">ข้อตกลงเบื้องต้น (MOU)</h2>
+        <p><strong>วัตถุประสงค์:</strong> เพื่อกำหนดแนวทางปฏิบัติและข้อผูกพันร่วมกันระหว่างโครงการ นักเรียน และผู้ปกครอง ในการบรรลุเป้าหมายการเรียนรู้</p>
+        
+        <div style="margin-top:10px; padding:12px; border:1px solid #ffe3d0; border-radius:12px; background:#fff8f2">
+          <ul style="list-style-type:disc; padding-left:20px; margin:0; line-height:1.6">
+            <li>นักเรียนต้องมีชั่วโมงเรียนรวม (Attendance) ไม่ต่ำกว่า 80% ตามเกณฑ์ที่กำหนดในแต่ละรายวิชา</li>
+            <li>นักเรียนต้องส่งงาน (Homework) และเข้าร่วมการสอบ (Exam) ตามกำหนดเวลาที่ประกาศ</li>
+            <li>ผู้ปกครองตกลงที่จะให้การสนับสนุนและติดตามผลการเรียนรู้ของนักเรียนอย่างสม่ำเสมอ</li>
+            <li>การกระทำความผิดร้ายแรง หรือการละเมิดข้อตกลง อาจส่งผลให้ถูกพิจารณาถอดถอนจากโครงการ</li>
+          </ul>
+        </div>
+        
+        <h2 style="font-size:1.5rem; font-weight:900; margin-top:24px; color:#1f2937">เอกสารเพิ่มเติม</h2>
+        <p>คุณสามารถดาวน์โหลดเอกสารฉบับเต็มได้ที่ลิงก์ต่อไปนี้:</p>
+        <a href="URL_TO_FULL_MOU_DOCUMENT" target="_blank" class="btn mini secondary" style="margin-top:8px"><i data-lucide="download"></i> ดาวน์โหลด MOU ฉบับเต็ม (PDF)</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b></footer>
+
+  <div id="busy" class="busy"><div class="box"><div class="spinner"></div><div id="busyMsg">กำลังโหลด...</div></div></div>
+
+  <script>
+    const $=s=>document.querySelector(s);
+    const busy=(s,m='กำลังโหลด...')=>{ $('#busyMsg').textContent=m; $('#busy').style.display=s?'flex':'none'; };
+    const hydrateHeader=u=>{ $('#roleBadge').textContent=(u.role||'USER').toUpperCase(); $('#userName').textContent=u.full_name||'-'; };
+    
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const raw = localStorage.getItem('lms_user'); 
+      if (!raw) { location.href='index.html'; return; }
+      const user = JSON.parse(raw);
+      hydrateHeader(user);
+      if(window.lucide) lucide.createIcons();
+
+      $('#btnBack').onclick=()=>{ busy(true,'กลับไปแดชบอร์ด...'); setTimeout(()=>location.href='dashboard.html',300); };
+      $('#btnLogout').onclick=()=>{ busy(true,'ออกจากระบบ...'); localStorage.removeItem('lms_user'); setTimeout(()=>location.href='index.html',300); };
+    });
+  </script>
+</body>
+</html>
