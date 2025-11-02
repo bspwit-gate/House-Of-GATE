@@ -14,12 +14,12 @@
   <header>
     <div class="header-inner">
       <div class="brand" style="align-items:center; gap:10px">
-        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
-          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        <button id="btnBack" class="btn mini secondary icon-only-compact" title="ย้อนกลับ">
+          <i data-lucide="arrow-left"></i> 
         </button>
-        <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
+        <!-- <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div> -->
         <div class="title">
-          <h1>ชื่อเว็บไซต์ (LMS)</h1>
+          <h1>House Of GATE</h1>
           <span>ปฏิทินกิจกรรม</span>
         </div>
       </div>
@@ -27,7 +27,7 @@
         <span class="dot"></span>
         <span id="roleBadge" class="role">ROLE</span>
         <span id="userName">ชื่อ-สกุล</span>
-        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+        <button id="btnLogout" class="btn-logout" title="ออกจากระบบ"><i data-lucide="log-out"></i></button>
       </div>
     </div>
   </header>
@@ -38,6 +38,7 @@
         <div style="font-weight:900; display:flex; align-items:center; gap:8px">
           <i data-lucide="calendar"></i> ปฏิทินกิจกรรม/นัดหมายโครงการ GATE
         </div>
+        <div>.</div>
         <div class="toolbar">
           <button id="btnReload" class="btn mini"><i data-lucide="refresh-cw"></i> โหลดใหม่</button>
           <button id="btnAdd" class="btn mini" style="display:none"><i data-lucide="plus"></i> เพิ่มกิจกรรม</button>
@@ -60,7 +61,7 @@
         </div>
       </div>
     </div>
-
+    <div>.</div>
     <div class="card">
       <div class="card-h">
         <div class="hint mini">ปฏิทินกิจกรรมสำคัญสำหรับนักเรียนในโครงการ</div>
@@ -114,8 +115,50 @@
     // ===== Config & helpers =====
     const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') ||
       'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+      
     const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
-    const busy=(s,m='กำลังประมวลผล...')=>{ $('#busyMsg').textContent=m; $('#busy').style.display=s?'flex':'none'; };
+    
+    // Helper function for busy status with duration
+    function busy(show, msg='กำลังประมวลผล...', duration=0) {
+      $('#busyMsg').textContent=msg; 
+      $('#busy').style.display=show?'flex':'none'; 
+      if(show && duration > 0) {
+          setTimeout(() => {
+              $('#busy').style.display='none';
+          }, duration);
+      }
+    }
+    
+    // ✅ FIX: ฟังก์ชันแสดงผลวันที่เป็น วัน/เดือน/ปี ที่แข็งแกร่งขึ้น
+    const formatDateDMY = (dateValue) => { 
+        if (!dateValue) return '-'; 
+        
+        // ตรวจสอบและตัดค่า Timezone หรือส่วนที่ไม่ใช่ข้อมูลวันที่ออกไป
+        let dateString = String(dateValue).split('/')[0]; // ตัดส่วนท้ายที่ไม่ถูกต้องออก
+        dateString = dateString.split('T')[0]; // ตัดเวลา (T...) ออกหากมี
+        
+        const date = new Date(dateString);
+        
+        // ถ้าแปลงเป็น Date object ไม่ได้ หรือเป็น Invalid Date
+        if (isNaN(date.getTime())) {
+            // ลองใช้รูปแบบการแปลงแบบไม่ระบุ Timezone สำหรับ Date/Timestamp จาก Google Sheet
+            // ซึ่งมักจะต้องระบุ Timezone เป็น UTC เพื่อให้ตีความวันที่ได้ถูกต้อง
+            const dateUTC = new Date(dateString.includes('Z') ? dateString : dateString + 'T00:00:00Z');
+            if (!isNaN(dateUTC.getTime())) {
+                date = dateUTC;
+            } else {
+                return dateValue; // คืนค่าเดิมหากแปลงไม่ได้จริงๆ
+            }
+        }
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        // แสดงผลเป็น DD/MM/YYYY
+        return `${day}/${month}/${year}`; 
+    };
+
     async function api(a,p){ const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,payload:p})}); return r.json(); }
     const canManage=u=>['teacher','admin'].includes((u.role||'').toLowerCase()); // เฉพาะครู/แอดมินเท่านั้นที่ลงได้
     const hydrateHeader=u=>{ $('#roleBadge').textContent=(u.role||'USER').toUpperCase(); $('#userName').textContent=u.full_name||'-'; };
@@ -127,17 +170,17 @@
     // ===== UI Builders =====
     function renderRows(list){
       const q = ($('#qInput').value||'').toLowerCase();
-      const levelFilter = ($('#levelInput').value||'').trim().split('/')[0].toLowerCase();
+      // Level filtering is now handled solely by the API/loadEvents to correctly include 'All Levels' events.
+      // We only use the local filter for the text search (q).
       
       const rows = (list||[]).filter(x=>{
-        const okLevel = !levelFilter || String(x.ClassLevel).toLowerCase().startsWith(levelFilter);
         const s = (x.Title+' '+x.Detail+' '+x.AssignedBy).toLowerCase();
-        return okLevel && (!q || s.includes(q));
+        return !q || s.includes(q);
       });
 
       $('#tbody').innerHTML = rows.length ? rows.map(x=>`
         <tr>
-          <td style="font-weight:800">${x.Date||'-'}</td>
+          <td style="font-weight:800">${formatDateDMY(x.Date)||'-'}</td>
           <td>${x.Title||'-'}</td>
           <td>${x.Detail||'-'}</td>
           <td>${x.ClassLevel||'ทุกระดับ'}</td>
@@ -153,7 +196,9 @@
       try{
         const level = $('#levelInput').value.trim();
         const payload = {};
-        if(level) payload.classLevel = level;
+        // API (code.gs) ถูกปรับให้รองรับการกรองที่ถูกต้อง:
+        // ถ้ามีการระบุ Level, API จะคืนกิจกรรมของ Level นั้น และกิจกรรมที่ ClassLevel ว่าง (ทุกระดับ)
+        if(level) payload.classLevel = level; 
         
         const r = await api('listCalendarEvents', payload);
         const list = r.events || [];
@@ -171,6 +216,8 @@
     function openModal(){ 
       $('#fDate').valueAsDate=new Date(); 
       $('#fLevel').value = $('#levelInput').value || '';
+      // สำหรับผู้ใช้ทั่วไป (student/leader) ไม่ควรอนุญาตให้เปลี่ยนระดับชั้นที่บันทึก
+      if(!canManage(_user)) $('#fLevel').disabled = true;
       $('#fTitle').value = '';
       $('#fDetail').value = '';
       $('#fLink').value = '';
@@ -181,7 +228,8 @@
     async function saveEvent(user){
       const date = $('#fDate').value;
       const title = $('#fTitle').value.trim();
-      const level = $('#fLevel').value.trim();
+      // ดึงค่า level ที่ถูกกรอก/ล็อกไว้
+      const level = $('#fLevel').value.trim(); 
       
       if(!date || !title){ alert('กรอก วันที่ และ หัวข้อ ให้ครบ'); return; }
 
@@ -189,20 +237,28 @@
         date, title, 
         detail: $('#fDetail').value.trim(),
         link: $('#fLink').value.trim(),
-        classLevel: level,
+        // ส่งเฉพาะส่วนของระดับชั้นหลัก (เช่น ม.5)
+        classLevel: level.split('/')[0].trim(), 
         assignedBy: user.full_name || user.user_id
       };
 
       busy(true,'กำลังบันทึกกิจกรรม...');
-      const r = await api('postCalendarEvent', payload);
-      busy(false);
-      
-      if(r.status==='success'){ 
-        closeModal();
-        alert('บันทึกสำเร็จ');
-        await loadEvents(user); 
+      try {
+        const r = await api('postCalendarEvent', payload);
+        busy(false); 
+
+        if(r.status==='success'){ 
+          closeModal();
+          await loadEvents(user); 
+          busy(true,'บันทึกกิจกรรมสำเร็จ', 1500); 
+        }
+        else {
+            alert('บันทึกไม่สำเร็จ: ' + (r.message || 'ไม่ทราบสาเหตุ'));
+        }
+      } catch (e) {
+          busy(false);
+          alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + e.message);
       }
-      else alert('บันทึกไม่สำเร็จ: ' + (r.message || 'ไม่ทราบสาเหตุ'));
     }
 
     // ===== Boot =====
@@ -213,8 +269,9 @@
       hydrateHeader(user);
       if(window.lucide) lucide.createIcons();
       
-      // Default level filter for students/leaders
+      // ✅ FIX: Default level filter for students/leaders (ล็อกการแสดงผลตามระดับชั้น)
       if(user.role === 'student' || user.role === 'leader'){
+        // ใช้ .split('/')[0] เพื่อให้ได้แค่ระดับชั้นหลัก (เช่น ม.5 จาก ม.5/2)
         $('#levelInput').value = (user.class_name||'').split('/')[0] || '';
         $('#levelInput').disabled = true;
       }
@@ -231,6 +288,7 @@
       $('#btnLogout').onclick=()=>{ busy(true,'ออกจากระบบ...'); localStorage.removeItem('lms_user'); setTimeout(()=>location.href='index.html',300); };
       $('#btnReload').onclick=async()=>{ await loadEvents(user); };
       
+      // การเปลี่ยน input จะถูกเรียกเมื่อผู้ดูแลระบบเปลี่ยนค่าเท่านั้น
       $('#levelInput').addEventListener('change', async ()=>{ await loadEvents(user); });
       $('#qInput').addEventListener('input', ()=> renderRows(_cache));
 
@@ -241,4 +299,3 @@
     });
   </script>
 </body>
-</html>

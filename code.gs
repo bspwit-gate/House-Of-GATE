@@ -12,6 +12,7 @@ const SHEET = {
   GOODDEEDS: 'GoodDeeds', // บันทึกเด็กดี
   CALENDAR: 'Calendar', // ปฏิทินกิจกรรม
   NEWS: 'News', // แจ้งข่าวสาร
+  TIMETABLE: 'Timetable', // ✅ ADDED
 };
 const WEEKS_PER_TERM = 20; // ใช้คำนวณ 80% (หน่วยกิต/สัปดาห์ * 20)
 
@@ -29,64 +30,45 @@ const SHEET_HEADERS = {
   [SHEET.GOODDEEDS]: ['Timestamp','Date','StudentID','FullName','Class','RecordedByRole','RecordedByID','SubjectID','SubjectName','DeedTopic','DeedDetail'],
   [SHEET.CALENDAR]:  ['Timestamp','Date','Title','Detail','Link','AssignedBy','ClassLevel'],
   [SHEET.NEWS]:      ['Timestamp','Date','Title','Detail','Link','PostedBy'],
+  [SHEET.TIMETABLE]: ['Class', 'DayOfWeek', 'SubjectID', 'SubjectName'], // ✅ ADDED
 };
 /***** ================== ENTRYPOINT ================== *****/
-// ทดสอบเร็ว ๆ จากเบราว์เซอร์: เปิด Web App ด้วย GET จะได้หน้า ping
 function doGet(e) {
   return HtmlService.createHtmlOutput('LMS GAS API is running ✅');
 }
 
-// Frontend เรียกด้วย fetch(POST) โดยส่ง JSON: { action: '...', payload: {...} }
 function doPost(e) {
   try {
     const body = e && e.postData && e.postData.contents ?
-JSON.parse(e.postData.contents) : {};
+    JSON.parse(e.postData.contents) : {};
     const action = body.action;
     const payload = body.payload || {};
-const router = {
-      // auth
+    const router = {
       loginUser,
-
-      // users
       getUsers,
       upsertUser,
       deleteUser,
-      getClassTeacher, // ✅ NEW: Contact Teacher
-
-      // subjects
+      getClassTeacher,
+      getUsersByClass, 
       getSubjectsByClass,
       getSubjectsForTeacher,
-
-      // attendance
-      saveAttendanceBulk,
+      upsertSubject, 
+      deleteSubject, 
+      saveAttendanceBulk, 
       markAbsent,
-      getAttendanceProgress,
-
-      // lesson logs
+      getAttendanceProgress, 
       saveLessonLog,
- 
       listLessonLogsByClassDate,
-
-      // homework
       postHomework,
       listHomeworkByClass,
-
-      // exams
       postExam,
       listExamsByClass,
-
-      // issues
       createIssue,
       listIssues,
       updateIssueStatus,
-
-      // reports
       reportSummary,
-      listClasses,           
-  
+      listClasses, 
       attendanceRiskByClass,
-      
-      // --- ✅ NEW ACTIONS ---
       saveGoodDeed,
       listGoodDeeds,
       postCalendarEvent,
@@ -94,133 +76,118 @@ const router = {
       postNews,
       listNews,
     };
-
     if (!router[action]) {
       return json({ status: 'fail', message: 'Unknown action: ' + action });
-}
+    }
     const result = router[action](payload);
     return json(result);
-} catch (err) {
+  } catch (err) {
     return json({ status: 'error', message: String(err) });
-}
+  }
 }
 
 /***** ================== HELPERS ================== *****/
 function book() { return SpreadsheetApp.getActiveSpreadsheet(); }
 
-// ถ้าไม่พบชีต ให้สร้างพร้อมใส่ header อัตโนมัติ
 function getOrCreateSheet(name) {
   let sh = book().getSheetByName(name);
-if (!sh) {
+  if (!sh) {
     sh = book().insertSheet(name);
     const header = SHEET_HEADERS[name] || [];
-if (header.length) sh.getRange(1, 1, 1, header.length).setValues([header]);
+    if (header.length) sh.getRange(1, 1, 1, header.length).setValues([header]);
   } else {
-    // ถ้ามีชีตแต่ไม่มี header และเรารู้ header → เติมให้
     const lastCol = sh.getLastColumn();
-if (lastCol === 0 && (SHEET_HEADERS[name]||[]).length) {
+    if (lastCol === 0 && (SHEET_HEADERS[name]||[]).length) {
       const header = SHEET_HEADERS[name];
       sh.getRange(1, 1, 1, header.length).setValues([header]);
-}
+    }
   }
   return sh;
 }
 
-// alias ที่รับประกันว่ามีชีตเสมอ
 function sheet(name) { return getOrCreateSheet(name);
 }
 
-// อ่านทั้งชีตแบบ header-based -> array ของ object
 function readAll(name) {
   const sh = sheet(name);
   const rng = sh.getDataRange();
-const values = rng.getValues();
+  const values = rng.getValues();
   if (!values || values.length < 2) return [];
-// ไม่มีข้อมูล (หรือมีแต่ header)
   const header = values[0].map(h => String(h).trim());
   const rows = values.slice(1);
-return rows.map(r => {
+  return rows.map(r => {
     const obj = {};
     header.forEach((h, i) => obj[h] = r[i]);
     return obj;
   });
 }
 
-// append แถวด้วย header mapping (ถ้า header ไม่มี จะสร้างให้)
 function appendRow(name, obj) {
   const sh = sheet(name);
-const rng = sh.getDataRange();
+  const rng = sh.getDataRange();
   const values = rng.getValues();
   if (!values || values.length === 0) {
     const header = (SHEET_HEADERS[name] && SHEET_HEADERS[name].length) ?
-SHEET_HEADERS[name] : Object.keys(obj);
+    SHEET_HEADERS[name] : Object.keys(obj);
     sh.appendRow(header);
     sh.appendRow(header.map(h => obj.hasOwnProperty(h) ? obj[h] : ''));
     return;
   }
   const header = values[0].map(h => String(h).trim());
-// กรณี header ยังไม่มีบางคอลัมน์ -> ขยาย header
   const needCols = Object.keys(obj).filter(k => header.indexOf(k) === -1);
-if (needCols.length) {
+  if (needCols.length) {
     const newHeader = header.concat(needCols);
     sh.getRange(1, 1, 1, newHeader.length).setValues([newHeader]);
   }
   const finalHeader = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
-const row = finalHeader.map(h => obj.hasOwnProperty(h) ? obj[h] : '');
+  const row = finalHeader.map(h => obj.hasOwnProperty(h) ? obj[h] : '');
   sh.appendRow(row);
 }
 
-// upsert แถว (แก้ไขถ้ามี key ซ้ำ, ถ้าไม่มีให้เพิ่ม) โดยเทียบจากคอลัมน์ key
 function upsertRow(name, keyCol, keyVal, obj) {
   const sh = sheet(name);
-const values = sh.getDataRange().getValues();
+  const values = sh.getDataRange().getValues();
   if (!values || values.length === 0) {
     const header = (SHEET_HEADERS[name] && SHEET_HEADERS[name].length) ?
-SHEET_HEADERS[name] : Object.keys(obj);
+    SHEET_HEADERS[name] : Object.keys(obj);
     sh.appendRow(header);
     sh.appendRow(header.map(h => obj[h] || ''));
     return { updated: false, created: 1, row: 2 };
-}
+  }
   const header = values[0].map(h => String(h).trim());
-  // ensure header contains all keys
   const needCols = Object.keys(obj).filter(k => header.indexOf(k) === -1);
-if (needCols.length) {
+  if (needCols.length) {
     const newHeader = header.concat(needCols);
     sh.getRange(1, 1, 1, newHeader.length).setValues([newHeader]);
   }
   const finalHeader = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
-const idx = {}; finalHeader.forEach((h, i) => idx[h] = i);
-
-  // หาแถวที่ key ตรง
+  const idx = {}; finalHeader.forEach((h, i) => idx[h] = i);
   const all = sh.getDataRange().getValues();
-for (let r = 1; r < all.length; r++) {
+  for (let r = 1; r < all.length; r++) {
     const rowKey = all[r][idx[keyCol]];
-if (String(rowKey) === String(keyVal)) {
-      // update row
+    if (String(rowKey) === String(keyVal)) {
       const rowVals = finalHeader.map(h => obj.hasOwnProperty(h) ? obj[h] : all[r][idx[h]]);
-sh.getRange(r + 1, 1, 1, rowVals.length).setValues([rowVals]);
+      sh.getRange(r + 1, 1, 1, rowVals.length).setValues([rowVals]);
       return { updated: 1, created: 0, row: r + 1 };
-}
+    }
   }
-  // append ใหม่
   const row = finalHeader.map(h => obj.hasOwnProperty(h) ? obj[h] : '');
   sh.appendRow(row);
-return { updated: 0, created: 1, row: sh.getLastRow() };
+  return { updated: 0, created: 1, row: sh.getLastRow() };
 }
 
-// ลบแถวตาม key
 function deleteRowByKey(name, keyCol, keyVal) {
   const sh = sheet(name);
-const values = sh.getDataRange().getValues();
+  const values = sh.getDataRange().getValues();
   if (!values || values.length < 2) return { deleted: 0 };
-const header = values[0].map(h => String(h).trim());
+  const header = values[0].map(h => String(h).trim());
   const idx = {};
   header.forEach((h, i) => idx[h] = i);
-for (let r = 1; r < values.length; r++) {
+  for (let r = 1; r < values.length; r++) {
     const rowKey = values[r][idx[keyCol]];
-if (String(rowKey) === String(keyVal)) {
+    if (String(rowKey) === String(keyVal)) {
       sh.deleteRow(r + 1);
-return { deleted: 1, row: r + 1 };
+      return { deleted: 1, row: r + 1 };
     }
   }
   return { deleted: 0 };
@@ -235,35 +202,86 @@ function json(o) {
 
 function isActive(val) {
   const s = String(val || 'TRUE').toUpperCase();
-return !(s === 'FALSE' || s === '0' || s === 'NO');
+  return !(s === 'FALSE' || s === '0' || s === 'NO');
+}
+
+// ✅ NEW HELPER: ฟังก์ชัน Normalize Class (สำคัญที่สุด)
+function normalizeClass(cls) {
+    if (!cls) return '';
+    let s = String(cls).trim().toUpperCase();
+    s = s.replace(/ม\./g, ''); // Remove ม. (ม.6/10 -> 6/10)
+    s = s.replace(/ /g, ''); // Remove internal spaces just in case
+    return s;
+}
+
+
+// ✅ NEW HELPER: แปลงวันที่เป็นชื่อวัน (ภาษาไทย)
+function getDayOfWeekName(dateString) {
+  const date = new Date(dateString + 'T00:00:00'); 
+  if (isNaN(date.getTime())) return null;
+  const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+  return days[date.getDay()];
+}
+
+// ✅ NEW HELPER: ดึงวิชาตามห้องและวัน (ปรับปรุงการดึง Subjects)
+function getSubjectsByClassAndDay(cls, dayName) {
+  const timetable = readAll(SHEET.TIMETABLE);
+  const targetCls = normalizeClass(cls); // ใช้ Normalized Class
+  
+  if (!timetable || timetable.length === 0) {
+    return subjectsByClass(cls).map(s => ({ id: s.SubjectID, name: s.SubjectName }));
+  }
+
+  const list = timetable.filter(t => 
+    normalizeClass(t.Class) === targetCls && // เทียบด้วย Normalized Class
+    String(t.DayOfWeek || '').trim() === dayName
+  ).map(t => ({ id: t.SubjectID, name: t.SubjectName }));
+  
+  if (list.length === 0) {
+     return subjectsByClass(cls).map(s => ({ id: s.SubjectID, name: s.SubjectName }));
+  }
+
+  const allSubjects = readAll(SHEET.SUBJECTS);
+  const finalSubjects = list.map(t => {
+    const subjectDetail = allSubjects.find(s => String(s.SubjectID) === String(t.id));
+    return {
+        id: t.id,
+        name: t.name,
+        creditPerWeek: Number(subjectDetail?.CreditPerWeek || 0)
+    };
+  });
+
+  return finalSubjects;
 }
 
 /***** ================== DOMAIN HELPERS ================== *****/
 function findUser(username, password) {
   const users = readAll(SHEET.USERS);
-return users.find(u =>
+  return users.find(u =>
     String(u.UserID) === String(username) &&
     String(u.Password) === String(password) &&
     isActive(u.Active)
   );
 }
 
-// ดึงวิชาตามห้องเรียน (รองรับทั้ง map ตรง Class และ map ตาม ClassLevel ที่ prefix)
+// ✅ MODIFIED: Trim input cls and stored subject class (ใช้ normalizeClass)
 function subjectsByClass(cls) {
+  const targetCls = String(cls || '').trim(); // ใช้ Trimmed Class สำหรับ Subjects (เพราะ Subjects ใช้ Class/ClassLevel)
   const all = readAll(SHEET.SUBJECTS);
-return all.filter(s => {
+  return all.filter(s => {
     if (!isActive(s.Active)) return false;
-    if (String(s.Class || '') === String(cls)) return true;
+    // Match 1: Trimmed Subject Class vs Trimmed Target Class
+    if (String(s.Class || '').trim() === targetCls) return true; 
+    // Match 2: Level prefix match
     const lvl = String(s.ClassLevel || '').trim();
-    return lvl && String(cls || '').startsWith(lvl); // เช่น ClassLevel=ม.5, Class=ม.5/2
+    return lvl && targetCls.startsWith(lvl); 
   });
 }
 
 /***** ================== ACTIONS ================== *****/
-// --- Auth ---
 function loginUser(p) {
   const u = findUser(p.username, p.password);
-if (!u) return { status: 'fail', message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' };
+  if (!u) return { status: 'fail', message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' };
   return {
     status: 'success',
     user: {
@@ -271,56 +289,60 @@ if (!u) return { status: 'fail', message: 'ชื่อผู้ใช้หร�
       full_name: u.FullName,
       class_name: u.Class,
       role: u.Role,
-      profile_url: u.ProfileURL ||
-''
+      profile_url: u.ProfileURL || ''
     }
   };
 }
 
 /* ===================== USERS ===================== */
-// โครงสร้างชีต Users: UserID, Password, FullName, Class, Role, Active, ProfileURL
 function getUsers(p) {
   const list = readAll(SHEET.USERS);
-list.forEach(u => u.Active = isActive(u.Active));
+  list.forEach(u => u.Active = isActive(u.Active));
   return { status: 'success', users: list };
 }
 
-// สร้าง/แก้ไขผู้ใช้จาก key=UserID
-// payload: { user: {UserID, Password, FullName, Class, Role, Active('TRUE'|'FALSE'), ProfileURL} }
+// ✅ ADDED FIX: ดึงรายชื่อนักเรียนตามห้อง (ใช้ normalizeClass)
+function getUsersByClass(p) {
+  if (!p.class) return { status: 'fail', message: 'ระบุห้องเรียน' };
+  
+  const targetClass = normalizeClass(p.class); // ใช้ Normalized Class
+  
+  const users = readAll(SHEET.USERS);
+  const list = users.filter(u => 
+    normalizeClass(u.Class) === targetClass && // เทียบด้วย Normalized Class
+    String(u.Role).toLowerCase() === 'student' &&
+    isActive(u.Active)
+  );
+  list.sort((a,b) => String(a.UserID).localeCompare(String(b.UserID), 'th', {numeric: true}));
+  return { status: 'success', users: list };
+}
+
 function upsertUser(p) {
   if (!p || !p.user || !p.user.UserID) return { status: 'fail', message: 'missing user or UserID' };
-const u = p.user;
+  const u = p.user;
   const obj = {
     UserID: u.UserID,
-    Password: u.Password ||
-'',
+    Password: u.Password || '',
     FullName: u.FullName || '',
-    Class: u.Class ||
-'',
+    Class: u.Class || '',
     Role: u.Role || 'student',
-    Active: (String(u.Active || 'TRUE').toUpperCase() === 'FALSE') ?
-'FALSE' : 'TRUE',
+    Active: (String(u.Active || 'TRUE').toUpperCase() === 'FALSE') ? 'FALSE' : 'TRUE',
     ProfileURL: u.ProfileURL || ''
   };
   const rs = upsertRow(SHEET.USERS, 'UserID', obj.UserID, obj);
-return { status: 'success', result: rs };
+  return { status: 'success', result: rs };
 }
 
-// ลบผู้ใช้ตาม UserID
-// payload: { userId: 'xxxxx' }
 function deleteUser(p) {
-  if (!p || !p.userId) return { status: 'fail', message: 'missing userId' };
-const rs = deleteRowByKey(SHEET.USERS, 'UserID', p.userId);
+  if (!p.userId) return { status: 'fail', message: 'missing userId' };
+  const rs = deleteRowByKey(SHEET.USERS, 'UserID', p.userId);
   if (rs.deleted) return { status: 'success' };
-return { status: 'fail', message: 'User not found' };
+  return { status: 'fail', message: 'User not found' };
 }
 
-// ✅ NEW ACTION: 6. ติดต่อครูประจำชั้น (Get Class Teacher)
 function getClassTeacher(p) {
-  // p: { class: 'ม.x/y' }
   if (!p.class) return { status: 'fail', message: 'ระบุห้องเรียน' };
   const users = readAll(SHEET.USERS);
-  // หาครูหรือแอดมินคนแรกที่ผูกกับห้องนั้นๆ
   const teacher = users.find(u => 
     String(u.Class) === String(p.class) && 
     (String(u.Role).toLowerCase() === 'teacher' || String(u.Role).toLowerCase() === 'admin') &&
@@ -335,7 +357,7 @@ function getClassTeacher(p) {
         role: teacher.Role,
         class: teacher.Class,
         profile: teacher.ProfileURL,
-      }
+    }
     };
   }
   return { status: 'fail', message: `ไม่พบครูประจำชั้นหรือผู้ดูแลห้อง ${p.class}` };
@@ -358,30 +380,72 @@ const list = all.filter(s =>
 return { status: 'success', subjects: list };
 }
 
+function upsertSubject(p) {
+  if (!p || !p.SubjectID || !p.SubjectName || !p.Class) {
+    return { status: 'fail', message: 'ข้อมูลวิชาไม่ครบถ้วน (รหัสวิชา, ชื่อวิชา, ห้อง)' };
+  }
+  const obj = {
+    SubjectID: p.SubjectID,
+    SubjectName: p.SubjectName,
+    CreditPerWeek: Number(p.CreditPerWeek || 0),
+    TeacherID: p.TeacherID || '',
+    TeacherName: p.TeacherName || '',
+    Class: p.Class,
+    ClassLevel: p.ClassLevel || '',
+    Active: (String(p.Active || 'TRUE').toUpperCase() === 'FALSE') ? 'FALSE' : 'TRUE',
+  };
+  const rs = upsertRow(SHEET.SUBJECTS, 'SubjectID', obj.SubjectID, obj);
+  return { status: 'success', result: rs };
+}
+
+function deleteSubject(p) {
+  if (!p.subjectId) return { status: 'fail', message: 'missing subjectId' };
+  const rs = deleteRowByKey(SHEET.SUBJECTS, 'SubjectID', p.subjectId);
+  if (rs.deleted) return { status: 'success' };
+  return { status: 'fail', message: 'Subject not found' };
+}
+
+
 /* ===================== ATTENDANCE ===================== */
 function saveAttendanceBulk(p) {
-  // p: { date, subjectId, subjectName, class, records:[{studentId,status,note}], recorderId }
+  const subjectsToSave = [];
+  if (p.subjectId === 'ALL_DAY') {
+    const dayName = getDayOfWeekName(p.date);
+    if (!dayName) return { status: 'fail', message: 'ไม่สามารถระบุวันในสัปดาห์จากวันที่ที่ป้อนได้' };
+
+    const subjectsForDay = getSubjectsByClassAndDay(p.class, dayName);
+    
+    subjectsForDay.forEach(s => subjectsToSave.push({ id: s.id, name: s.name }));
+  } else {
+    subjectsToSave.push({ id: p.subjectId, name: p.subjectName });
+  }
+
   const ts = nowISO();
-(p.records || []).forEach(r => {
-    appendRow(SHEET.ATTEND, {
-      Timestamp: ts,
-      Date: p.date,
-      SubjectID: p.subjectId,
-      SubjectName: p.subjectName,
-      Class: p.class,
-      StudentID: r.studentId,
-      Status: r.status || 'Present',
-      Note: r.note || '',
-      RecorderID: p.recorderId || ''
+  let savedCount = 0;
+
+  subjectsToSave.forEach(sub => {
+    (p.records || []).forEach(r => {
+      appendRow(SHEET.ATTEND, {
+        Timestamp: ts,
+        Date: p.date,
+        SubjectID: sub.id,
+        SubjectName: sub.name,
+        Class: p.class,
+        StudentID: r.studentId,
+        Status: r.status || 'Present',
+        Note: r.note || '',
+        RecorderID: p.recorderId || ''
+      });
+      savedCount++;
     });
   });
-return { status: 'success', saved: (p.records || []).length };
+  
+  return { status: 'success', saved: savedCount };
 }
 
 function markAbsent(p) {
-  // p: { date, subjectId, subjectName, class, studentIds:[], recorderId }
   const ts = nowISO();
-(p.studentIds || []).forEach(id => {
+  (p.studentIds || []).forEach(id => {
     appendRow(SHEET.ATTEND, {
       Timestamp: ts,
       Date: p.date,
@@ -394,33 +458,47 @@ function markAbsent(p) {
       RecorderID: p.recorderId || ''
     });
   });
-return { status: 'success', saved: (p.studentIds || []).length };
+  return { status: 'success', saved: (p.studentIds || []).length };
 }
 
 function getAttendanceProgress(p) {
-  // p: { userId }
+  if (!p.userId) return { status: 'fail', message: 'Missing userId' };
   const users = readAll(SHEET.USERS);
-const user = users.find(u => String(u.UserID) === String(p.userId));
+  const user = users.find(u => String(u.UserID) === String(p.userId));
   if (!user) return { status: 'fail', message: 'ไม่พบผู้ใช้' };
-const cls = user.Class;
-  const subs = subjectsByClass(cls); // ต้องมี CreditPerWeek
+  
+  // ✅ FIX: ใช้ Normalized Class จาก User
+  const userClassNormalized = normalizeClass(user.Class);
+  
+  // ✅ FIX: ส่ง user.Class (original value) ให้ subjectsByClass เพื่อให้ตรรกะ ClassLevel (ม.5) ยังทำงานได้
+  const subs = subjectsByClass(user.Class); 
+  
+  // ✅ FIX: ดึง ATTENDANCE RECORDS และเปรียบเทียบด้วย Normalized Class
   const att = readAll(SHEET.ATTEND).filter(a =>
     String(a.StudentID) === String(p.userId) &&
-    String(a.Class) === String(cls)
+    normalizeClass(a.Class) === userClassNormalized // ตรวจสอบ Class โดย Normalized ทั้งสองฝั่ง
   );
-const presentStatuses = new Set(['Present', 'Late', 'Leave']); // ปรับได้
+  
+  const attendedStatuses = new Set(['Present', 'Late', 'SickLeave', 'PersonalLeave']);
+  
   const progress = subs.map(s => {
+    const subjectAtt = att.filter(a => String(a.SubjectID) === String(s.SubjectID));
+    
+    const attended = subjectAtt.filter(a => attendedStatuses.has(String(a.Status))).length;
+    const totalChecked = subjectAtt.length;
+    
+    const pct = totalChecked > 0 ? Math.min(100, Math.round((attended / totalChecked) * 100)) : 0;
+    
     const required = Number(s.CreditPerWeek || 0) * WEEKS_PER_TERM;
-    const attended = att.filter(a => String(a.SubjectID) === String(s.SubjectID) && presentStatuses.has(String(a.Status))).length;
-    const pct = required > 0 ? Math.round((attended / required) * 100) : 0;
+
     return {
       subjectId: s.SubjectID,
       subjectName: s.SubjectName,
-      requiredSessions: required,
-      attendedSessions: attended,
+      requiredSessions: required, 
+      attendedSessions: attended, 
+      totalChecked: totalChecked, 
       percent: pct,
-    
-    pass80: pct >= 80
+      pass80: pct >= 80
     };
   });
 
@@ -429,7 +507,6 @@ const presentStatuses = new Set(['Present', 'Late', 'Leave']); // ปรับ�
 
 /* ===================== LESSON LOGS ===================== */
 function saveLessonLog(p) {
-  // p: { date, subjectId, subjectName, class, topic, summary, materialLink, teacherId, teacherName }
   appendRow(SHEET.LESSON, {
     Timestamp: nowISO(),
     Date: p.date,
@@ -442,21 +519,18 @@ function saveLessonLog(p) {
     TeacherID: p.teacherId || '',
     TeacherName: p.teacherName || ''
   });
-return { status: 'success' };
+  return { status: 'success' };
 }
 
 function listLessonLogsByClassDate(p) {
-  // p: { class, subjectId, date?
-}
-  let list = readAll(SHEET.LESSON).filter(x => String(x.Class) === String(p.class) && String(x.SubjectID) === String(p.subjectId));
-if (p.date) list = list.filter(x => String(x.Date) === String(p.date));
+  const list = readAll(SHEET.LESSON).filter(x => String(x.Class) === String(p.class) && String(x.SubjectID) === String(p.subjectId));
+  if (p.date) list = list.filter(x => String(x.Date) === String(p.date));
   list.sort((a,b) => new Date(b.Date) - new Date(a.Date));
-return { status: 'success', logs: list };
+  return { status: 'success', logs: list };
 }
 
 /* ===================== HOMEWORK ===================== */
 function postHomework(p) {
-  // p: { assignDate, subjectId, subjectName, class, title, detail, dueDate, attachmentLink, assignedBy }
   appendRow(SHEET.HOMEWORK, {
     Timestamp: nowISO(),
     AssignDate: p.assignDate,
@@ -469,12 +543,10 @@ function postHomework(p) {
     AttachmentLink: p.attachmentLink || '',
     AssignedBy: p.assignedBy || ''
   });
-return { status: 'success' };
+  return { status: 'success' };
 }
 
 function listHomeworkByClass(p) {
-  // p: { class, subjectId?
-}
   let list = readAll(SHEET.HOMEWORK).filter(x => String(x.Class) === String(p.class));
   if (p.subjectId) list = list.filter(x => String(x.SubjectID) === String(p.subjectId));
 list.sort((a,b) => new Date(a.DueDate) - new Date(b.DueDate));
@@ -483,7 +555,6 @@ list.sort((a,b) => new Date(a.DueDate) - new Date(b.DueDate));
 
 /* ===================== EXAMS ===================== */
 function postExam(p) {
-  // p: { examDate, examTime, subjectId, subjectName, class, scope, location, seat, note, assignedBy }
   appendRow(SHEET.EXAMS, {
     Timestamp: nowISO(),
     ExamDate: p.examDate,
@@ -501,8 +572,6 @@ return { status: 'success' };
 }
 
 function listExamsByClass(p) {
-  // p: { class, subjectId?
-}
   let list = readAll(SHEET.EXAMS).filter(x => String(x.Class) === String(p.class));
   if (p.subjectId) list = list.filter(x => String(x.SubjectID) === String(p.subjectId));
 list.sort((a,b) => new Date(a.ExamDate) - new Date(b.ExamDate));
@@ -511,9 +580,8 @@ list.sort((a,b) => new Date(a.ExamDate) - new Date(b.ExamDate));
 
 /* ===================== ISSUES ===================== */
 function createIssue(p) {
-  // p: { createdBy, role, class, category, title, detail, attachmentLink }
   const issueId = 'ISS-' + Math.random().toString(36).slice(2, 8).toUpperCase();
-appendRow(SHEET.ISSUES, {
+  appendRow(SHEET.ISSUES, {
     Timestamp: nowISO(),
     IssueID: issueId,
     CreatedBy: p.createdBy || '',
@@ -528,12 +596,10 @@ appendRow(SHEET.ISSUES, {
     UpdatedAt: '',
     ResolutionNote: ''
   });
-return { status: 'success', issueId };
+  return { status: 'success', issueId };
 }
 
 function listIssues(p) {
-  // p: { status?, class?, createdBy?
-}
   let list = readAll(SHEET.ISSUES);
   if (p.status) list = list.filter(x => String(x.Status) === String(p.status));
 if (p.class) list = list.filter(x => String(x.Class) === String(p.class));
@@ -543,14 +609,13 @@ list.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
 }
 
 function updateIssueStatus(p) {
-  // p: { issueId, status, assignee?, resolutionNote? }
   const sh = sheet(SHEET.ISSUES);
 const values = sh.getDataRange().getValues();
   if (!values || values.length < 2) return { status: 'fail', message: 'No data' };
 const header = values[0].map(h => String(h).trim());
   const idx = {};
   header.forEach((h, i) => idx[h] = i);
-for (let r = 1; r < values.length; r++) {
+  for (let r = 1; r < values.length; r++) {
     if (values[r][idx.IssueID] === p.issueId) {
       if (p.status != null) values[r][idx.Status] = p.status;
 if (p.assignee != null) values[r][idx.Assignee] = p.assignee;
@@ -565,9 +630,7 @@ sh.getRange(r + 1, 1, 1, values[r].length).setValues([values[r]]);
 
 /* ===================== REPORTS ===================== */
 function reportSummary(p) {
-  // p: { class }
   const cls = p.class;
-// ให้แน่ใจว่ามีทุกชีต (จะสร้างอัตโนมัติถ้ายังไม่มี)
   getOrCreateSheet(SHEET.SUBJECTS);
   getOrCreateSheet(SHEET.ATTEND);
   getOrCreateSheet(SHEET.HOMEWORK);
@@ -575,22 +638,22 @@ function reportSummary(p) {
 
   const subs = subjectsByClass(cls);
   const att = readAll(SHEET.ATTEND).filter(a => String(a.Class) === String(cls));
-const hw = readAll(SHEET.HOMEWORK).filter(h => String(h.Class) === String(cls));
-  const ex = readAll(SHEET.EXAMS).filter(e => String(e.Class) === String(cls));
+  const hw = readAll(SHEET.HOMEWORK).filter(h => String(h.Class) === String(cls));
+  const ex = readAll(SHEET.EXAMS).filter(e => String(h.Class) === String(cls));
 
   const bySub = {};
-subs.forEach(s => bySub[s.SubjectID] = { subjectName: s.SubjectName, totalStudents: 0, present: 0 });
-att.forEach(a => {
+  subs.forEach(s => bySub[s.SubjectID] = { subjectName: s.SubjectName, totalStudents: 0, present: 0 });
+  att.forEach(a => {
     if (!bySub[a.SubjectID]) return;
     if (!bySub[a.SubjectID].students) bySub[a.SubjectID].students = {};
     bySub[a.SubjectID].students[a.StudentID] = true;
     if (['Present', 'Late', 'Leave'].includes(String(a.Status))) bySub[a.SubjectID].present++;
   });
-Object.values(bySub).forEach(o => {
+  Object.values(bySub).forEach(o => {
     o.totalStudents = o.students ? Object.keys(o.students).length : 0;
     delete o.students;
   });
-return {
+  return {
     status: 'success',
     class: cls,
     subjects: subs,
@@ -600,31 +663,26 @@ return {
   };
 }
 
-  // ✅ รายชื่อห้อง (unique) จาก Subjects ที่ Active
 function listClasses(p){
   const subs = readAll(SHEET.SUBJECTS).filter(s=>isActive(s.Active));
   const set = {};
-subs.forEach(s=>{ const c=String(s.Class||'').trim(); if(c) set[c]=true; });
+  subs.forEach(s=>{ const c=String(s.Class||'').trim(); if(c) set[c]=true; }); 
   return { status:'success', classes: Object.keys(set).sort() };
 }
 
-// ✅ ความเสี่ยงการเข้าเรียนต่อห้อง: ok / risk / fail
 function attendanceRiskByClass(p){
   const cls = p.class;
   const users = readAll(SHEET.USERS).filter(u=>String(u.Class)===String(cls)&&isActive(u.Active));
-const subs  = subjectsByClass(cls); // ต้องมี CreditPerWeek
+  const subs  = subjectsByClass(cls); // ต้องมี CreditPerWeek
   const att   = readAll(SHEET.ATTEND).filter(a=>String(a.Class)===String(cls));
   const presentStatuses = new Set(['Present','Late','Leave']);
-// จำนวนครั้งที่ต้องเข้าเรียนต่อวิชา
   const req = {}; subs.forEach(s=>{ req[s.SubjectID] = Number(s.CreditPerWeek||0) * WEEKS_PER_TERM; });
-// นับการเข้าเรียนต่อคนต่อวิชา
   const byStu = {}; users.forEach(u=>{ byStu[u.UserID] = { fullName:u.FullName, minPct:100, sub:{} }; });
-att.forEach(a=>{
+  att.forEach(a=>{
     if(!presentStatuses.has(String(a.Status))) return;
     const sid=String(a.StudentID); if(!byStu[sid]) return;
     const k=String(a.SubjectID); byStu[sid].sub[k]=(byStu[sid].sub[k]||0)+1;
   });
-// คิดเปอร์เซ็นต์ขั้นต่ำสุดของแต่ละคน (ต่ำสุดในทุกวิชา)
   const out=[];
   Object.keys(byStu).forEach(sid=>{
     let minPct=100;
@@ -636,17 +694,15 @@ att.forEach(a=>{
     });
     let status='ok';
     if(minPct<80) status='fail';
-    else if(minPct<85) status='risk'; // เสี่ยงถ้าเฉียดเกณฑ์
+    else if(minPct<85) status='risk'; 
     out.push({ studentId:sid, fullName:byStu[sid].fullName, minPercent:minPct, status });
   });
-return { status:'success', class:cls, list: out };
+  return { status:'success', class:cls, list: out };
 }
 
-/* ===================== ✅ NEW ACTIONS (3, 4, 7) ===================== */
+/* ===================== NEW ACTIONS ===================== */
 
-// 3. บันทึกเด็กดี (Good Student Log)
 function saveGoodDeed(p) {
-  // p: { date, studentId, fullName, class, recordedByRole, recordedByID, subjectId?, subjectName?, deedTopic, deedDetail }
   if (!p.studentId || !p.deedTopic || !p.recordedByID || !p.recordedByRole) {
     return { status: 'fail', message: 'ข้อมูลไม่ครบถ้วน (นักเรียน, หัวข้อ, ผู้บันทึก)' };
   }
@@ -668,20 +724,16 @@ function saveGoodDeed(p) {
 }
 
 function listGoodDeeds(p) {
-  // p: { studentId?, class?, subjectId? }
   let list = readAll(SHEET.GOODDEEDS);
   
   if (p.studentId) list = list.filter(x => String(x.StudentID) === String(p.studentId));
   else if (p.class) list = list.filter(x => String(x.Class) === String(p.class));
   if (p.subjectId) list = list.filter(x => String(x.SubjectID) === String(p.subjectId));
-
   list.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
   return { status: 'success', deeds: list };
 }
 
-// 4. ปฏิทินกิจกรรม GATE (GATE Activity Calendar)
 function postCalendarEvent(p) {
-  // p: { date, title, detail, link, assignedBy, classLevel? }
   if (!p.date || !p.title) {
     return { status: 'fail', message: 'ระบุวันที่และหัวข้อกิจกรรม' };
   }
@@ -698,21 +750,18 @@ function postCalendarEvent(p) {
 }
 
 function listCalendarEvents(p) {
-  // p: { classLevel? } - ถ้าว่างจะเอามาทั้งหมด
   let list = readAll(SHEET.CALENDAR);
   
   if (p.classLevel) {
      const level = String(p.classLevel).split('/')[0].trim();
-     list = list.filter(x => !x.ClassLevel || String(x.ClassLevel).startsWith(level));
+  list = list.filter(x => !x.ClassLevel || String(x.ClassLevel).startsWith(level));
   }
   
-  list.sort((a,b) => new Date(a.Date) - new Date(b.Date)); // เรียงตามวันที่เร็วสุด
+  list.sort((a,b) => new Date(a.Date) - new Date(b.Date));
   return { status: 'success', events: list };
 }
 
-// 7. แจ้งข่าวสาร (News/Announcements)
 function postNews(p) {
-  // p: { title, detail, link, postedBy }
   if (!p.title) {
     return { status: 'fail', message: 'ระบุหัวข้อข่าวสาร' };
   }
@@ -724,11 +773,10 @@ function postNews(p) {
     Link: p.link || '',
     PostedBy: p.postedBy || '',
   });
-  return { status: 'success' };
+  return { status: 'success', message: 'ประกาศสำเร็จ' };
 }
 
 function listNews(p) {
-  // p: { }
   let list = readAll(SHEET.NEWS);
   list.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
   return { status: 'success', news: list };

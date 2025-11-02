@@ -14,20 +14,20 @@
   <header>
     <div class="header-inner">
       <div class="brand" style="align-items:center; gap:10px">
-        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
-          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        <button id="btnBack" class="btn mini secondary icon-only-compact" title="ย้อนกลับ">
+          <i data-lucide="arrow-left"></i> 
         </button>
         <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
         <div class="title">
-          <h1>ชื่อเว็บไซต์ (LMS)</h1>
-          <span>ข่าวสาร/ประกาศ</span>
+          <h1>House Of GATE</h1>
+          <span>ประกาศข่าวสาร</span>
         </div>
       </div>
       <div class="who">
         <span class="dot"></span>
         <span id="roleBadge" class="role">ROLE</span>
         <span id="userName">ชื่อ-สกุล</span>
-        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+        <button id="btnLogout" class="btn-logout" title="ออกจากระบบ"><i data-lucide="log-out"></i></button>
       </div>
     </div>
   </header>
@@ -38,6 +38,7 @@
         <div style="font-weight:900; display:flex; align-items:center; gap:8px">
           <i data-lucide="megaphone"></i> ข่าวสารและประกาศสำคัญ
         </div>
+        <div>.</div>
         <div class="toolbar">
           <button id="btnReload" class="btn mini"><i data-lucide="refresh-cw"></i> โหลดใหม่</button>
           <button id="btnAdd" class="btn mini" style="display:none"><i data-lucide="plus"></i> ประกาศข่าว</button>
@@ -56,7 +57,7 @@
         </div>
       </div>
     </div>
-
+    <div>.</div>
     <div class="card">
       <div class="card-h">
         <div class="hint mini">ประกาศสำหรับนักเรียนและผู้ปกครอง</div>
@@ -108,7 +109,46 @@
     const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') ||
       'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
     const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
-    const busy=(s,m='กำลังประมวลผล...')=>{ $('#busyMsg').textContent=m; $('#busy').style.display=s?'flex':'none'; };
+    
+    // Helper function for busy status with duration
+    function busy(show, msg='กำลังประมวลผล...', duration=0) {
+      $('#busyMsg').textContent=msg; 
+      $('#busy').style.display=show?'flex':'none'; 
+      if(show && duration > 0) {
+          setTimeout(() => {
+              $('#busy').style.display='none';
+          }, duration);
+      }
+    }
+
+    // ✅ FIX: ฟังก์ชันแสดงผลวันที่เป็น วัน/เดือน/ปี (DD/MM/YYYY)
+    const formatDateDMY = (dateValue) => { 
+        if (!dateValue) return '-'; 
+        
+        // ตรวจสอบและตัดค่า Timezone หรือส่วนที่ไม่ใช่ข้อมูลวันที่ออกไป
+        let dateString = String(dateValue).split('/')[0]; // ตัดส่วนท้ายที่ไม่ถูกต้องออก
+        dateString = dateString.split('T')[0]; // ตัดเวลา (T...) ออกหากมี
+        
+        let date = new Date(dateString);
+        
+        // ถ้าแปลงเป็น Date object ไม่ได้ หรือเป็น Invalid Date (พยายามแปลงเป็น UTC)
+        if (isNaN(date.getTime())) {
+            const dateUTC = new Date(dateString.includes('Z') ? dateString : dateString + 'T00:00:00Z');
+            if (!isNaN(dateUTC.getTime())) {
+                date = dateUTC;
+            } else {
+                return dateValue; // คืนค่าเดิมหากแปลงไม่ได้จริงๆ
+            }
+        }
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        // แสดงผลเป็น DD/MM/YYYY
+        return `${day}/${month}/${year}`; 
+    };
+
     async function api(a,p){ const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,payload:p})}); return r.json(); }
     const canManage=u=>['teacher','admin'].includes((u.role||'').toLowerCase()); // เฉพาะครู/แอดมินเท่านั้นที่ลงได้
     const hydrateHeader=u=>{ $('#roleBadge').textContent=(u.role||'USER').toUpperCase(); $('#userName').textContent=u.full_name||'-'; };
@@ -127,7 +167,7 @@
 
       $('#tbody').innerHTML = rows.length ? rows.map(x=>`
         <tr>
-          <td style="font-weight:800">${x.Date||'-'}</td>
+          <td style="font-weight:800">${formatDateDMY(x.Date)||'-'}</td>
           <td>${x.Title||'-'}</td>
           <td>${x.Detail||'-'}</td>
           <td>${x.Link?`<a class="chip" target="_blank" href="${x.Link}">เปิดลิงก์</a>`:'-'}</td>
@@ -174,15 +214,23 @@
       };
 
       busy(true,'กำลังประกาศข่าว...');
-      const r = await api('postNews', payload);
-      busy(false);
-      
-      if(r.status==='success'){ 
-        closeModal();
-        alert('ประกาศสำเร็จ');
-        await loadNews(user); 
+      try {
+        const r = await api('postNews', payload);
+        busy(false);
+        
+        if(r.status==='success'){ 
+          closeModal();
+          await loadNews(user); 
+          // แสดงสถานะบันทึกสำเร็จด้วย busy overlay
+          busy(true,'ประกาศข่าวสารสำเร็จ', 1500); 
+        }
+        else {
+            alert('ประกาศไม่สำเร็จ: ' + (r.message || 'ไม่ทราบสาเหตุ'));
+        }
+      } catch (e) {
+          busy(false);
+          alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + e.message);
       }
-      else alert('ประกาศไม่สำเร็จ: ' + (r.message || 'ไม่ทราบสาเหตุ'));
     }
 
     // ===== Boot =====
@@ -213,4 +261,3 @@
     });
   </script>
 </body>
-</html>

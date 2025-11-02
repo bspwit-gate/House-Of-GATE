@@ -25,12 +25,28 @@
         <span class="dot"></span>
         <span id="roleBadge" class="role">ROLE</span>
         <span id="userName">ชื่อ-สกุล</span>
-        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+        <button id="btnLogout" class="btn-logout" title="ออกจากระบบ"><i data-lucide="log-out"></i></button>
       </div>
     </div>
   </header>
 
   <main class="container">
+    
+    <div id="newsBoard" class="card" style="margin-bottom:16px;">
+        <div class="card-h">
+            <div style="font-weight:900; display:flex; align-items:center; gap:8px">
+                <i data-lucide="megaphone"></i> บอร์ดประชาสัมพันธ์ล่าสุด
+            </div>
+            <div>.</div>
+            <button id="btnGoToNews" class="btn mini secondary" onclick="location.href='news.html'">
+                <i data-lucide="list-collapse" 
+                        style="width: 20px; height: 20px;"></i> ดูข่าวสารทั้งหมด
+            </button>
+        </div>
+        <div id="newsContent" class="card-b">
+            <div style="text-align:center; color:#999">กำลังโหลดข่าวสาร...</div>
+        </div>
+    </div>
     <div id="tiles" class="tiles"></div>
   </main>
 
@@ -46,19 +62,100 @@
   </div>
 
   <script>
-    // ---------- helpers ----------
+// ---------- helpers ----------
+    const APPS_SCRIPT_URL = localStorage.getItem('GAS_ENDPOINT') ||
+      'https://script.google.com/macros/s/AKfycbzHHxZlvI20WuwDt8x5L-FhO8CK7GV1NE6HSR0SfjDKZlXbXnnFBCMSylaShnLv01mNhg/exec';
+      
     const $ = s => document.querySelector(s);
     function busy(show, msg = 'กำลังโหลด...') {
       $('#busyMsg').textContent = msg;
       $('#busy').style.display = show ? 'flex' : 'none';
     }
+    
+    async function api(a,p){ 
+      const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,payload:p})}); 
+      return r.json(); 
+    }
+
+    // ✅ FIX: ย้ายตำแหน่งของ formatDateDMY ขึ้นมาก่อน loadNewsBoard
+    const formatDateDMY = (dateValue) => { 
+        if (!dateValue) return '-'; 
+        
+        let dateString = String(dateValue).split('/')[0];
+        dateString = dateString.split('T')[0];
+        
+        let date = new Date(dateString);
+        
+        if (isNaN(date.getTime())) {
+            const dateUTC = new Date(dateString.includes('Z') ? dateString : dateString + 'T00:00:00Z');
+            if (!isNaN(dateUTC.getTime())) {
+                date = dateUTC;
+            } else {
+                return dateValue;
+            }
+        }
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        return `${day}/${month}/${year}`; 
+    };
+
+    // --- NEW FUNCTION: Load News for Dashboard Board ---
+    async function loadNewsBoard(){
+        const newsContent = document.getElementById('newsContent');
+        newsContent.innerHTML = '<div style="text-align:center; color:#999">กำลังโหลดข่าวสาร...</div>';
+        
+        try{
+            // ใช้ API listNews ที่เราได้เพิ่มใน code.gs ไปแล้ว
+            const r = await api('listNews', {});
+            
+            if (r.status !== 'success') {
+                console.error('API Error in loadNewsBoard: API status failure', r);
+                throw new Error('API Status is not success'); 
+            }
+            
+            const latestNews = (r.news || []).slice(0, 1); // Get only the latest item
+            
+            if(latestNews.length > 0){
+                const n = latestNews[0];
+                newsContent.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px">
+                        <div style="min-width:0; flex-grow:1;">
+                            <div class="hint mini" style="font-weight:700; opacity:0.8; margin-bottom:4px">
+                                📢 ประกาศล่าสุด: ${formatDateDMY(n.Date) || '-'}
+                            </div>
+                            <div style="font-weight:800; font-size:1.15rem; color:#111827; line-height:1.3">
+                                ${n.Title}
+                            </div>
+                            <div style="color:#6b7280; font-size:.9rem; margin-top:4px">
+                                ${n.Detail || 'คลิกดูรายละเอียด'}
+                            </div>
+                        </div>
+                        <div style="flex-shrink:0; align-self:center;">
+                            <button class="btn mini" onclick="location.href='news.html#${n.Timestamp}'">
+                                รายละเอียด
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                newsContent.innerHTML = '<div style="text-align:center; color:#999">ไม่มีข่าวสารล่าสุดในระบบ</div>';
+            }
+            if(window.lucide) lucide.createIcons();
+        } catch(e){
+            console.error('Network or Processing Error in loadNewsBoard:', e);
+            newsContent.innerHTML = '<div style="text-align:center; color:#ef4444">โหลดบอร์ดข่าวสารไม่สำเร็จ</div>';
+        }
+    }
+
 
     // ---------- icons & menus ----------
     const ICONS = {
       attendance: 'check-circle', homework: 'clipboard-list', exam: 'graduation-cap',
       lesson: 'book-open', issues: 'alert-triangle', users: 'users',
       subjects: 'book', reports: 'bar-chart-3',
-      // ✅ NEW ICONS
       gooddeeds: 'star', news: 'megaphone', calendar: 'calendar',
       mou: 'handshake', contact: 'users'
     };
@@ -131,7 +228,7 @@
       const list = MENUS[role] || MENUS.student;
       tiles.innerHTML = list.map(tileTemplate).join('');
       if(window.lucide){
-        // ใช้สีส้มหลักและขนาดที่เหมาะสมกับดีไซน์ V3
+        // ใช้สีส้มหลักและขนาดที่เหมาะสมกับดีไซน์ V4
         lucide.createIcons({attrs:{width:38,height:38,stroke:'#ff7a18','stroke-width':2}});
       }
       tiles.querySelectorAll('.tile').forEach(el=>{
@@ -159,6 +256,9 @@
       const u = JSON.parse(raw);
       hydrate(u);
       render(u.role || 'student');
+      
+      // Load news board immediately
+      loadNewsBoard(); 
 
       document.getElementById('btnLogout').addEventListener('click', () => {
         busy(true, 'กำลังออกจากระบบ...');

@@ -14,10 +14,9 @@
   <header>
     <div class="header-inner">
       <div class="brand" style="align-items:center; gap:10px">
-        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
-          <i data-lucide="arrow-left"></i> ย้อนกลับ
-    
-    </button>
+        <button id="btnBack" class="btn mini secondary icon-only-compact" title="ย้อนกลับ">
+          <i data-lucide="arrow-left"></i> 
+        </button>
         <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
         <div class="title">
           <h1>ชื่อเว็บไซต์ (LMS)</h1>
@@ -29,7 +28,7 @@
         <span id="roleBadge" class="role">ROLE</span>
         <span id="userName">ชื่อ-สกุล</span>
       
-  <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+        <button id="btnLogout" class="btn-logout" title="ออกจากระบบ"><i data-lucide="log-out"></i></button>
       </div>
     </div>
   </header>
@@ -118,7 +117,7 @@ display:flex; align-items:center; gap:8px"><i data-lucide="file-plus"></i> เ�
           <div class="auth-col" style="grid-column:1 / -1"><label>หัวข้อ</label><input id="fTopic" placeholder="เช่น ความน่าจะเป็น (Probability)"></div>
           <div class="auth-col" style="grid-column:1 / -1"><label>สรุปย่อ</label><input id="fSummary" placeholder="เรียนเรื่องอะไร ทำกิจกรรมอะไร"></div>
  
-         <div class="auth-col" style="grid-column:1 / -1"><label>ลิงก์เอกสาร/สื่อ</label><input id="fMaterial" placeholder="URL เอกสาร ใบงาน สไลด์ ฯลฯ"></div>
+         <div class="auth-col" style="grid-column:1 / -1"><label>ลิงก์เอกสาร/สื่อ</label><input id="fMaterial" placeholder="URL เอกสาร ใบงาน สไลด์ ฯลัฐ"></div>
         </div>
         <div class="toolbar" style="margin-top:10px">
           <button id="btnSave" class="btn"><i data-lucide="save"></i> บันทึก</button>
@@ -265,4 +264,3 @@ if(isAdminOrTeacher(user)){
     });
   </script>
 </body>
-</html>

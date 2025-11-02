@@ -14,8 +14,8 @@
   <header>
     <div class="header-inner">
       <div class="brand" style="align-items:center; gap:10px">
-        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
-          <i data-lucide="arrow-left"></i> ย้อนกลับ
+        <button id="btnBack" class="btn mini secondary icon-only-compact" title="ย้อนกลับ">
+          <i data-lucide="arrow-left"></i> 
         </button>
         <div class="logo"><img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo"></div>
         <div class="title">
@@ -27,7 +27,7 @@
         <span class="dot"></span>
         <span id="roleBadge" class="role">ROLE</span>
         <span id="userName">ชื่อ-สกุล</span>
-        <button id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+        <button id="btnLogout" class="btn-logout" title="ออกจากระบบ"><i data-lucide="log-out"></i></button>
       </div>
     </div>
   </header>
@@ -69,7 +69,7 @@
           <div style="font-size:1.4rem; font-weight:900; color:#ff7a18">${t.name}</div>
           <div style="font-size:1rem; color:#1f2937">${t.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ครูประจำชั้น'} (ห้อง ${t.class})</div>
           <div class="hint mini" style="margin-top:10px">รหัส: ${t.id}</div>
-          <div style="margin-top:10px;">
+          <div class="toolbar" style="margin-top:10px; justify-content:center">
             <a href="mailto:email@example.com" class="btn mini secondary" style="margin:4px"><i data-lucide="mail"></i> ส่งอีเมล</a>
             <a href="tel:081xxxxxxx" class="btn mini" style="margin:4px"><i data-lucide="phone"></i> โทรศัพท์</a>
             </div>
@@ -118,4 +118,3 @@
     });
   </script>
 </body>
-</html>

@@ -38,7 +38,6 @@ header{ position:sticky; top:8px; z-index:100; background:#fff; border:1px solid
 .who{ display:flex; align-items:center; gap:8px; background:#ffffff; border:1px solid var(--border); padding:6px 10px; border-radius:999px; box-shadow:0 4px 12px rgba(0,0,0,.06) }
 .who .dot{ width:8px; height:8px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 3px rgba(34,197,94,.2) }
 .who .role{ font-weight:800; color:var(--brand) }
-@media (max-width:480px){ .who{ display:none } }
 
 main{ padding:clamp(8px,1.8vw,24px) 0 56px }
 .login-wrap{ width:min(860px,100% - 16px); margin:clamp(12px,3vh,32px) auto 0 }
@@ -74,18 +73,18 @@ main{ padding:clamp(8px,1.8vw,24px) 0 56px }
 @media (max-width:720px){ .auth-row{ grid-template-columns:1fr } }
 
 /* Buttons */
-/* ===== ✅ V7 FIX: Solid Soft Orange, Subtle Shadow, Good Rounded Corners (12px) ===== */
+/* ===== ✅ V10 FIX: Removed Border, Used Solid Color, Maintained Subtle Shadow/Rounding ===== */
 .btn{ 
   display:inline-flex; 
   align-items:center; 
   justify-content: center; 
   gap:8px; 
-  padding:6px 10px; 
-  border-radius:999px; /* Less rounded, as requested */
+  padding:10px 16px; 
+  border-radius:999px; 
   
-  /* Solid Background/Border Style */
-  border:1px solid #f97316; 
-  background-color: #ff7e00; /* Solid Soft Orange Color */
+  /* Solid Background/No Border */
+  border: none; /* Removed Border */
+  background-color: #ffb066; /* Solid Soft Orange Color */
   box-shadow:0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow for depth */
   
   color:#fff; 
@@ -109,23 +108,23 @@ main{ padding:clamp(8px,1.8vw,24px) 0 56px }
 .btn.secondary{ 
   background:#fff; 
   color:var(--brand); 
-  border:1px solid #ffcc99; 
+  border:1px solid #ffcc99; /* Kept border for contrast on secondary buttons */
   box-shadow:0 2px 4px rgba(0,0,0,.05); 
 }
 .btn.secondary:hover{ background:#fff9f2; filter:brightness(1); transform:translateY(-1px); box-shadow:0 3px 6px rgba(0,0,0,.1); }
 .btn.secondary:active{ background:#fff; transform:translateY(0); box-shadow:0 1px 2px rgba(0,0,0,.03); }
 
 .btn.warn{ 
-  background-color: #fbd359; /* Solid warn color */
-  border-color:#f9b000; 
+  background-color: #fbd359; 
+  border: none; /* Removed Border */
   box-shadow:0 4px 8px rgba(0,0,0,0.1); 
 }
 .btn.warn:hover{ transform:translateY(-1px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
 .btn.warn:active{ transform:translateY(0); box-shadow:0 2px 4px rgba(0,0,0,0.05); }
 
 .btn.danger{ 
-  background-color: #e54b4b; /* Solid danger color */
-  border-color:#cc0000; 
+  background-color: #e54b4b; 
+  border: none; /* Removed Border */
   box-shadow:0 4px 8px rgba(0,0,0,0.1); 
 }
 .btn.danger:hover{ transform:translateY(-1px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
@@ -136,26 +135,62 @@ main{ padding:clamp(8px,1.8vw,24px) 0 56px }
   padding:clamp(12px,1.8vw,16px); 
   font-size:clamp(1rem,2.2vw,1.1rem); 
   margin-top:12px;
-  border-radius: 999px; /* Slightly more rounded for big buttons */
+  border-radius: 999px; 
 }
-.btn.mini{ padding:6px 10px; border-radius:999px; font-size:.95rem; } 
+.btn.mini{ padding:8px 12px; border-radius:999px; font-size:.95rem; } /* ✅ REVERT: คืนค่าเป็นขนาดมาตรฐาน */
 
-.btn i[data-lucide]{ width:18px; height:18px; stroke-width:2; }
-.toolbar .btn + .btn{ margin-left:10px; }
+.btn-extra-mini {
+  padding: 5px 8px !important; /* ลดขนาด padding ให้เล็กลงอีก */
+  font-size: .85rem !important; /* ลดขนาด font ให้เล็กลงอีก */
+  border-radius: 999px !important;
+  line-height: 1 !important; /* ช่วยให้การจัดเรียงข้อความ/ไอคอนกระชับขึ้น */
+}
+/* ✅ FIX: กำหนดขนาดไอคอนภายในปุ่มนี้โดยเฉพาะ */
+.btn-extra-mini i[data-lucide] {
+  width: 16px !important; 
+  height: 16px !important;
+  stroke-width: 2.5 !important;
+}
 
+.icon-only-compact {
+  padding: 8px !important; /* Uniform padding for square button */
+  gap: 0 !important; /* Remove gap */
+}
 
-/* Common components */
-.grid{ display:grid; gap:clamp(12px,2vw,18px) }
-.card{ border-radius:22px; box-shadow:0 10px 24px rgba(0,0,0,.06); overflow:hidden; }
-.card-h{ padding:14px 18px; background:linear-gradient(180deg,#fff,#fff8f2); border-bottom:1px solid #ffe3d0; display:flex; align-items:center; justify-content:space-between }
-.card-b{ padding:16px 18px; background:#fff; }
-.toolbar{ display:flex; gap:8px; flex-wrap:wrap }
-.chip{ display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--border); padding:6px 10px; border-radius:999px; color:var(--brand) }
-.hint,.tabs-line .t-tab,label,.chip,.who .role,.title span{ color:var(--brand) }
+/* --- ✅ V10 FIX: Minimal Logout Button Style (Icon Only, No BG/Border) --- */
+.who .btn-logout {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--brand) !important; /* Brand color for the icon */
+  padding: 6px !important; /* Minimal padding */
+  margin: 0 0 0 8px; /* Maintain separation from name */
+  width: 38px; /* Fixed small size for the clickable area */
+  height: 38px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px !important; /* Round button container */
+  cursor: pointer;
+  transition: .15s;
+}
+.who .btn-logout:hover {
+    background: #fff5e8 !important; /* Soft hover background */
+    transform: none !important;
+    box-shadow: none !important;
+}
+.who .btn-logout i[data-lucide] {
+    width: 20px !important;
+    height: 20px !important;
+    stroke-width: 2.5 !important;
+    color: var(--brand) !important;
+}
 
 /* Tables */
+/* --- ✅ FIX: Table Responsiveness (Mobile) --- */
 .table-wrap{ overflow:auto; border-radius:18px; border:1px solid #ffe3d0; }
-table{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
+table{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; min-width: 768px; /* Ensure horizontal scroll appears on mobile if content is too wide */ }
 table th, table td{ word-break:normal !important; white-space:normal; overflow-wrap:anywhere; text-align:center; vertical-align:middle; padding:8px 10px; }
 table thead th{ position:sticky; top:0; z-index:1; background:#fff8f2; color:#ff7a18; font-weight:700; }
 tbody tr:nth-child(even){ background:#fffdf9; }
@@ -262,7 +297,7 @@ input, select, textarea{
 input:focus, select:focus, textarea:focus{ border-color:#ff9a4d; box-shadow:0 0 0 3px rgba(255,154,77,.15); }
 select:disabled{ background:#f8f8f8; color:#666; cursor:not-allowed; }
 .table-wrap{ overflow:auto; border-radius:18px; border:1px solid #ffe3d0; }
-table{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
+table{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; min-width: 768px; /* Ensure horizontal scroll appears on mobile if content is too wide */ }
 table th, table td{ word-break:normal !important; white-space:normal; overflow-wrap:anywhere; text-align:center; vertical-align:middle; padding:8px 10px; }
 table thead th{ position:sticky; top:0; z-index:1; background:#fff8f2; color:#ff7a18; font-weight:700; }
 tbody tr:nth-child(even){ background:#fffdf9; }

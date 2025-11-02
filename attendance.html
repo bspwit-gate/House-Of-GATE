@@ -14,10 +14,9 @@
   <header>
     <div class="header-inner">
       <div class="brand">
-        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px">
-          <i data-lucide="arrow-left"></i> ย้อนกลับ
-    
-    </button>
+        <button id="btnBack" class="btn mini secondary icon-only-compact" title="ย้อนกลับ">
+          <i data-lucide="arrow-left"></i> 
+        </button>
         <div class="logo">
           <img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo">
         </div>
@@ -28,88 +27,151 @@
       </div>
       <div class="who">
         <span class="dot"></span>
-       
- <span id="roleBadge" class="role">ROLE</span>
+        <span id="roleBadge" class="role">ROLE</span>
         <span id="userName">ชื่อ-สกุล</span>
-        <button id="btnLogout" class="btn mini" style="padding:8px 12px;
-margin-left:8px">ออกจากระบบ</button>
+        <button id="btnLogout" class="btn-logout" title="ออกจากระบบ"><i data-lucide="log-out"></i></button>
       </div>
     </div>
-  
-</header>
+  </header>
 <div class="container">
   <div class="card"><div class="card-h"><div class="badge warn"><i data-lucide="alert-triangle"></i> หากเป็นหัวหน้าห้อง/นักเรียน ระบบจะล็อกห้องโดยอัตโนมัติ</div></div></div>
 </div>
 
-  <main class="container grid">
-    <div class="card">
-      <div class="card-h">
-        <div style="font-weight:900;
-display:flex; align-items:center; gap:8px">
-          <i data-lucide="check-circle"></i> สรุปการเข้าเรียนของฉัน
+<main class="container grid">
+    
+    <div id="summarySection" class="card">
+        <div class="card-h">
+            <div style="font-weight:900; display:flex; align-items:center; gap:8px">
+                <i data-lucide="check-circle"></i> สรุปการเข้าเรียนของฉัน
+            </div>
+            <div class="hint mini">เปอร์เซ็นต์คิดจาก “จำนวนครั้งที่ถูกเช็คชื่อจริง” • เกณฑ์ผ่าน ≥ 80%</div>
         </div>
-        <div class="hint mini">เปอร์เซ็นต์คิดจาก “จำนวนครั้งที่ถูกเช็คชื่อจริง” • เกณฑ์ผ่าน ≥ 80%</div>
-      </div>
-      <div class="card-b">
-        <div class="table-wrap"><table>
-          <thead>
-            <tr>
-              <th>วิชา</th>
-     
-         <th>เปอร์เซ็นต์เข้าเรียน</th>
-              <th>ขาดได้อีกกี่ครั้ง</th>
-              <th>สถานะ</th>
-            </tr>
-          </thead>
-          <tbody id="summaryBody">
-            <tr><td colspan="4" style="text-align:center;color:#999">กำลังโหลดข้อมูล...</td></tr>
-          </tbody>
-      
-  </table></div>
-      </div>
+        <div class="card-b">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>วิชา</th>
+                            <th>เปอร์เซ็นต์เข้าเรียน</th>
+                            <th>ขาดได้อีกกี่ครั้ง</th>
+                            <th>สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryBody">
+                        <tr><td colspan="4" style="text-align:center;color:#999">กำลังโหลดข้อมูล...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
+    <div id="statsManagementSection" class="card" style="display:none">
+        <div class="card-h">
+            <div style="font-weight:900; display:flex; align-items:center; gap:8px">
+                <i data-lucide="users"></i> จัดการ/ดูสถิตินักเรียนในห้อง
+            </div>
+        </div>
+        <div class="card-b">
+            <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+                <div class="auth-col" id="classSelectWrap">
+                    <label>ห้องเรียน</label>
+                    <select id="classSelect"></select>
+                </div>
+            </div>
+            <div class="table-wrap" style="margin-top:14px">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รหัส</th>
+                            <th>ชื่อ-สกุล</th>
+                            <th style="width:120px">ดูสถิติ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentStatsBody">
+                        <tr><td colspan="3" style="text-align:center;color:#999">กรุณาเลือกห้องเรียน</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
     <div id="recordSection" class="card" style="display:none">
-      <div class="card-h" style="align-items:center">
-        <div style="font-weight:900;
-display:flex; align-items:center; gap:8px">
-          <i data-lucide="clipboard-check"></i> ลงเวลาเรียนรายวัน
+        <div class="card-h" style="align-items:center">
+            <div style="font-weight:900; display:flex; align-items:center; gap:8px">
+                <i data-lucide="clipboard-check"></i> ลงเวลาเรียนรายวัน
+            </div>
+            <div class="toolbar">
+                <button id="btnLoadStudents" class="btn secondary">โหลดรายชื่อนักเรียน</button>
+                <button id="btnSaveAttendance" class="btn">บันทึกเช็คชื่อ</button>
+            </div>
         </div>
-        <div class="toolbar">
-          <button id="btnLoadStudents" class="btn secondary">โหลดรายชื่อนักเรียน</button>
-          <button id="btnSaveAttendance" class="btn">บันทึกเช็คชื่อ</button>
-        </div>
-      </div>
-      <div class="card-b">
-        <div class="grid" style="grid-template-columns:repeat(3,1fr)">
-          <div class="auth-col">
-  
-          <label>วันที่</label>
-            <input id="dateInput" type="date">
-          </div>
-          <div class="auth-col" id="classWrap" style="display:none">
-            <label>ห้อง</label>
-            <input id="classInput" placeholder="เช่น ม.5/2">
-          </div>
-          <div class="auth-col">
-     
-       <label>วิชา</label>
-            <select id="subjectSelect">
-              <option value="">-- เลือกวิชา --</option>
-            </select>
-          </div>
-        </div>
+        <div class="card-b">
+            <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+                <div class="auth-col">
+                    <label>วันที่</label>
+                    <input id="dateInput" type="date">
+                </div>
+                <div class="auth-col" id="classInputWrap">
+                    <label>ห้อง</label>
+                    <input id="classInput" placeholder="เช่น ม.5/2" disabled>
+                </div>
+                <div class="auth-col">
+                    <label>วิชา</label>
+                    <select id="subjectSelect">
+                        <option value="">-- เลือกวิชา --</option>
+                    </select>
+                </div>
+            </div>
 
-        <div class="hint mini" style="margin-top:8px">
-          * ติ๊กชื่อ = มาเรียน (Present) • เอาติ๊กออก = ขาด (Absent)
-   
-     </div>
+            <div class="hint mini" style="margin-top:8px">
+                * สถานะ: มา, ลาป่วย, ลากิจ, สาย, ขาด (สาย 3 ครั้ง = ขาด 1)
+            </div>
 
-        <div id="studentList" class="grid" style="grid-template-columns:repeat(3,1fr);
-margin-top:10px"></div>
-      </div>
+            <div id="studentList" class="table-wrap" style="margin-top:10px">
+                <table id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th>รหัส</th>
+                            <th>ชื่อ-สกุล</th>
+                            <th style="width:150px">สถานะ</th>
+                            <th>หมายเหตุ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentListBody">
+                        <tr><td colspan="4" style="text-align:center;color:#999">โหลดรายชื่อนักเรียนก่อน</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-  </main>
+</main>
+
+<div id="modalStats" class="modal">
+    <div class="panel" style="max-width: 600px;">
+        <div class="panel-h">
+            <div style="font-weight:900; display:flex; align-items:center; gap:8px"><i data-lucide="bar-chart-2"></i> สถิติการเข้าเรียนรายบุคคล</div>
+            <button id="btnCloseStats" class="btn mini secondary">ปิด</button>
+        </div>
+        <div class="panel-b">
+            <h4 id="statsUserName" style="margin-top:0; color:#ff7a18">ชื่อ-สกุล: -</h4>
+            <div class="table-wrap">
+                <table id="individualStatsTable">
+                    <thead>
+                        <tr>
+                            <th>วิชา</th>
+                            <th>เข้าเรียน/ถูกเช็คทั้งหมด</th>
+                            <th>%</th>
+                            <th>สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsBody">
+                        <tr><td colspan="4" style="text-align:center;color:#999">กำลังโหลดข้อมูลสถิติ...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
   <footer>
     พัฒนาระบบโดย <b>นายอธิวัฒน์ ทิมทอง</b> ร่วมกับ <b>คุณครูอานนท์ เมืองแก้ว</b>
@@ -132,9 +194,15 @@ margin-top:10px"></div>
 = sel => document.querySelector(sel);
     const $$ = sel => Array.from(document.querySelectorAll(sel));
 
-    function busy(show, msg='กำลังประมวลผล...'){
+    // Helper function for busy status with duration (ลดระยะเวลาเหลือ 800ms)
+    function busy(show, msg='กำลังประมวลผล...', duration=0){
       $('#busyMsg').textContent = msg;
       $('#busy').style.display = show ? 'flex' : 'none';
+      if(show && duration > 0) {
+          setTimeout(() => {
+              $('#busy').style.display='none';
+          }, duration);
+      }
     }
 
     async function api(action, payload){
@@ -143,162 +211,291 @@ margin-top:10px"></div>
         headers:{'Content-Type':'text/plain;charset=utf-8'},
         body: JSON.stringify({action, payload})
       });
-return res.json();
+      return res.json();
     }
 
     function hydrateHeader(user){
       $('#roleBadge').textContent = (user.role || 'USER').toUpperCase();
-$('#userName').textContent = user.full_name || '-';
+      $('#userName').textContent = user.full_name || '-';
     }
+
+    const isStudent = (user) => (user.role || '').toLowerCase() === 'student';
+    const isLeader = (user) => (user.role || '').toLowerCase() === 'leader';
+    const isTeacher = (user) => (user.role || '').toLowerCase() === 'teacher';
+    const isAdmin = (user) => (user.role || '').toLowerCase() === 'admin';
+    const isAdminOrTeacher = (user) => isTeacher(user) || isAdmin(user);
+    const canManageAttendance = (user) => isLeader(user) || isTeacher(user) || isAdmin(user);
 
     function statusChipByPercent(p){
       if(p >= 80) return '<span class="chip">ผ่าน</span>';
-if(p >= 60) return '<span class="chip" style="color:#f59e0b">เสี่ยง</span>';
+      if(p >= 60) return '<span class="chip" style="color:#f59e0b">เสี่ยง</span>';
       return '<span class="chip" style="color:#ef4444">ไม่ผ่าน</span>';
-}
+    }
 
     function gauge(percent){
       const p = Math.max(0, Math.min(100, percent|0));
-return `
+      return `
         <div class="gauge"><div style="width:${p}%"></div></div>
         <div class="number" style="font-weight:800;margin-top:4px">${p}%</div>
       `;
-}
+    }
 
-    // =================== Summary Table (Student view) ===================
+    // สถานะเช็คชื่อ (ใช้ในการบันทึก)
+    const ATTENDANCE_STATUSES = [
+      { value: 'Present', label: 'มา' },
+      { value: 'Late', label: 'สาย' },
+      { value: 'SickLeave', label: 'ลาป่วย' },
+      { value: 'PersonalLeave', label: 'ลากิจ' },
+      { value: 'Absent', label: 'ขาด' }
+    ];
+
+    // =================== 1. Summary Table (Student/Leader view) ===================
     async function loadSummary(user){
       busy(true,'กำลังโหลดสรุปการเข้าเรียน...');
-const tbody = $('#summaryBody');
+      const tbody = $('#summaryBody');
       try{
         const d = await api('getAttendanceProgress', { userId: user.user_id });
-if(d.status !== 'success'){
+        if(d.status !== 'success'){
           tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#ef4444">โหลดไม่สำเร็จ</td></tr>';
-          busy(false); return;
-}
+          return;
+        }
+        
         const rows = (d.progress || []).map(p => {
-          // รองรับทั้งโครงใหม่ (percent, canAbsentMore, status) และโครงเก่า (requiredSessions/attendedSessions)
-          let percent = p.percent;
-          if (percent == null && p.requiredSessions != null) {
-            percent = p.requiredSessions > 0 ? Math.round((p.attendedSessions / p.requiredSessions) * 100) : 0;
-          }
-    
-      let canAbsentMore = (p.canAbsentMore != null) ? p.canAbsentMore : 0;
-          if (p.stats && p.stats.maxAbsent != null && p.stats.absent != null && p.canAbsentMore == null){
-            canAbsentMore = Math.max(p.stats.maxAbsent - p.stats.absent, 0);
-          }
+          let percent = p.percent || 0;
+          let canAbsentMore = p.canAbsentMore || 0;
+          
+          // ✅ FIX: แสดง Attended / Total Checked ในส่วนสรุปของนักเรียน
+          let attended = p.attendedSessions || 0; 
+          let totalChecked = p.totalChecked || 0; 
+          
           return `
             <tr>
-            
-  <td>${p.subjectName}</td>
-              <td>${gauge(percent||0)}</td>
+              <td>${p.subjectName}</td>
+              <td>
+                ${gauge(percent)}
+                <div class="hint mini" style="margin-top:2px;">(${attended} / ${totalChecked} ครั้ง)</div> 
+              </td>
               <td class="number">${canAbsentMore}</td>
-              <td>${statusChipByPercent(percent||0)}</td>
+              <td>${statusChipByPercent(percent)}</td>
             </tr>
           `;
         }).join('');
-tbody.innerHTML = rows || '<tr><td colspan="4" style="text-align:center;color:#999">ไม่มีข้อมูล</td></tr>';
+        tbody.innerHTML = rows || '<tr><td colspan="4" style="text-align:center;color:#999">ไม่มีข้อมูล</td></tr>';
       }catch(err){
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#ef4444">เกิดข้อผิดพลาดในการโหลด</td></tr>';
-}finally{
+      }finally{
         busy(false);
       }
     }
 
-    // =================== Record Section (Leader/Teacher/Admin) ===================
-    function showRecordSectionByRole(user){
-      const record = $('#recordSection');
-const classWrap = $('#classWrap');
-      if(['leader','teacher','admin'].includes(user.role)){
-        record.style.display = 'block';
-}
-      if(['teacher','admin'].includes(user.role)){
-        classWrap.style.display = 'block';
-// ครู/แอดมินต้องเลือกห้อง
-      }
+    // =================== 2. Stats Management (Teacher/Admin view) ===================
+    
+    // โหลดรายชื่อห้องเรียนทั้งหมด (Admin) หรือห้องของตัวเอง (Teacher)
+    async function loadClassOptions(user) {
+        const select = $('#classSelect');
+        let classes = [];
+        
+        if (isAdmin(user)) {
+            // Admin: โหลดทุกห้องจาก Subjects
+            const r = await api('listClasses', {});
+            classes = r.classes || [];
+            select.innerHTML = '<option value="">-- เลือกห้องเรียน --</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            select.onchange = () => loadStudentsForStats(user);
+        } else if (isTeacher(user)) {
+            // Teacher: ล็อกห้องของตัวเอง
+            const cls = user.class_name;
+            if (cls) {
+                select.innerHTML = `<option value="${cls}">${cls}</option>`;
+                select.disabled = true;
+                loadStudentsForStats(user);
+            }
+        }
     }
 
-    function renderSubjectOptions(list){
-      $('#subjectSelect').innerHTML = (list||[])
-        .map(s => `<option value="${s.SubjectID}|${s.SubjectName}|${s.CreditPerWeek||0}">${s.SubjectName}</option>`)
-        .join('') ||
-'<option value="">-- ไม่พบวิชา --</option>';
+    // โหลดรายชื่อนักเรียนในห้องที่เลือก/กำหนด (สำหรับแสดงตารางดูสถิติ)
+    async function loadStudentsForStats(user) {
+        // ✅ FIX: ใช้ .trim() สำหรับค่าจาก classSelect/class_name
+        const cls = ($('#classSelect').value || user.class_name || '').trim();
+        if (!cls) return;
+
+        console.log(`[DEBUG] Stats: Attempting to load students for class: "${cls}"`);
+
+        busy(true, 'กำลังโหลดรายชื่อนักเรียน...');
+        const tbody = $('#studentStatsBody');
+        
+        try {
+            // ✅ NOTE: API ต้องถูกแก้ไขให้ trim ค่า Class ที่รับมาด้วย (code.gs)
+            const r = await api('getUsersByClass', { class: cls });
+            
+            if (r.status !== 'success') {
+                console.error('[DEBUG] Stats API Call Failed:', r.message);
+                 tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#ef4444">API ล้มเหลว: ${r.message || 'ไม่ทราบสาเหตุ'}</td></tr>`;
+                 return;
+            }
+            
+            const students = r.users || [];
+            console.log(`[DEBUG] Stats: Found ${students.length} student(s)`);
+
+
+            tbody.innerHTML = students.length
+                ? students.map(s => `
+                    <tr>
+                        <td>${s.UserID}</td>
+                        <td>${s.FullName}</td>
+                        <td><button class="btn mini" data-id="${s.UserID}" data-name="${s.FullName}" onclick="openIndividualStats('${s.UserID}', '${s.FullName}')"><i data-lucide="bar-chart-2"></i> ดูสถิติ</button></td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="3" style="text-align:center;color:#999">ไม่พบนักเรียนในห้องนี้</td></tr>';
+            if(window.lucide) lucide.createIcons();
+        } catch(e) {
+            console.error('[DEBUG] Stats Network or Processing Error:', e);
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#ef4444">โหลดรายชื่อไม่สำเร็จ</td></tr>';
+        } finally {
+            busy(false);
+        }
+    }
+    
+    // เปิด Modal แสดงสถิติรายบุคคล (Pop-up สวย ๆ)
+    async function openIndividualStats(userId, userName) {
+        $('#modalStats').classList.add('show');
+        $('#statsUserName').textContent = `ชื่อ-สกุล: ${userName} (รหัส: ${userId})`;
+        const tbody = $('#statsBody');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999">กำลังโหลดข้อมูลสถิติ...</td></tr>';
+
+        try {
+            const d = await api('getAttendanceProgress', { userId: userId });
+            if (d.status !== 'success') {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#ef4444">โหลดสถิติไม่สำเร็จ</td></tr>';
+                return;
+            }
+
+            const rows = (d.progress || []).map(p => {
+                const percent = p.percent || 0;
+                return `
+                    <tr>
+                        <td>${p.subjectName}</td>
+                        <td class="number">${p.attendedSessions || 0} / ${p.totalChecked || 0}</td>
+                        <td class="number">${percent}%</td>
+                        <td>${statusChipByPercent(percent)}</td>
+                    </tr>
+                `;
+            }).join('');
+            tbody.innerHTML = rows || '<tr><td colspan="4" style="text-align:center;color:#999">ไม่พบข้อมูล</td></tr>';
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#ef4444">เกิดข้อผิดพลาดในการโหลดสถิติ</td></tr>';
+        }
+    }
+
+    function closeIndividualStats() {
+        $('#modalStats').classList.remove('show');
+    }
+
+
+    // =================== 3. Record Section (Check-in) ===================
+    
+    // โหลดวิชาสำหรับลงทะเบียน
+    function renderSubjectOptions(list, currentClass){
+        const options = list.map(s => `<option value="${s.SubjectID}|${s.SubjectName}">${s.SubjectName}</option>`).join('');
+        // ✅ ADDED: ตัวเลือกเช็คทั้งวัน
+        const allDayOption = `<option value="ALL_DAY|วิชาทั้งหมดในห้อง ${currentClass}">เช็คทั้งวัน (วิชาตามตารางเรียนวันนี้)</option>`;
+        
+        $('#subjectSelect').innerHTML = `<option value="">-- เลือกวิชา --</option>${allDayOption}${options}`;
     }
 
     async function loadSubjectsForRole(user){
-      // leader/student → ใช้ห้องตัวเอง
-      if(user.role === 'leader' || user.role === 'student'){
-        const r = await api('getSubjectsByClass', { class: user.class_name });
-renderSubjectOptions(r.subjects || []);
-        return;
+      // ✅ FIX: ใช้ .trim() กับ user.class_name ก่อนใช้งาน
+      const cls = (user.class_name || '').trim();
+      if (canManageAttendance(user) && cls) {
+        const r = await api('getSubjectsByClass', { class: cls });
+        renderSubjectOptions(r.subjects || [], cls);
       }
-      // teacher/admin → รอกรอกห้อง แล้วค่อยโหลด
-      const classInput = $('#classInput');
-const loadForClass = async () => {
-        const cls = classInput.value.trim();
-        if(!cls) return;
-const r = await api('getSubjectsByClass', { class: cls });
-        renderSubjectOptions(r.subjects || []);
-      };
-      classInput.addEventListener('change', loadForClass);
-// auto load ถ้ามีค่าเริ่มต้น
-      if(classInput.value) loadForClass();
-}
+    }
 
-    async function loadStudents(user){
-      let cls = user.class_name;
-if(['teacher','admin'].includes(user.role)){
-        cls = $('#classInput').value.trim();
-        if(!cls){ alert('กรุณากรอก/เลือกห้องก่อน'); return;
-}
-      }
-      busy(true,'กำลังโหลดรายชื่อนักเรียน...');
-const r = await api('getUsersByClass', { class: cls }); // ✅ FIX: ต้องแก้ API เป็น 'getUsers' หรือ 'getUsersByClass'
-      // สมมติว่า GAS มี 'getUsersByClass' ที่คืน { status:'success', users:[...] }
-      // ถ้าไม่มี ต้องแก้ GAS ให้มี หรือแก้ตรงนี้เป็น 'getUsers' แล้ว .filter(u => u.Class === cls)
-      // *** ขอสมมติว่า GAS มี 'getUsersByClass' ตามชื่อที่เรียก ***
-      
-      const list = r.status==='success' ? (r.users || []) : [];
-const box = $('#studentList');
-      box.innerHTML = list.length
-        ?
-list.map(st => `
-            <label class="card" style="padding:10px 12px; display:flex; align-items:center; gap:8px">
-              <input type="checkbox" class="attd" data-id="${st.UserID}" checked>
-              <span>${st.UserID} — ${st.FullName}</span>
-            </label>
-          `).join('')
-        : '<div class="hint">ไม่พบนักเรียนในห้องนี้</div>';
-busy(false);
+    // โหลดรายชื่อนักเรียนสำหรับเช็คชื่อ
+    async function loadStudentsForCheckin(user){
+        // ✅ FIX: ใช้ .trim() เพื่อตัดช่องว่างที่อาจติดมา
+        const cls = $('#classInput').value.trim(); 
+        if(!cls){ alert('กรุณากรอก/เลือกห้องก่อน'); return; }
+
+        console.log(`[DEBUG] Checkin: Attempting to load students for class: "${cls}"`);
+        
+        busy(true,'กำลังโหลดรายชื่อนักเรียน...');
+        const tbody = $('#studentListBody');
+        
+        try {
+            const r = await api('getUsersByClass', { class: cls });
+            
+            if (r.status !== 'success') {
+                console.error('[DEBUG] Checkin API Call Failed:', r.message);
+                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444">API ล้มเหลว: ${r.message || 'ไม่ทราบสาเหตุ'}</td></tr>`;
+                 return;
+            }
+
+            const students = r.users || [];
+            console.log(`[DEBUG] Checkin: Found ${students.length} student(s)`);
+            
+            // สร้าง Options สำหรับ Dropdown สถานะ
+            const statusOptions = ATTENDANCE_STATUSES.map(s => 
+                `<option value="${s.value}" ${s.value === 'Present' ? 'selected' : ''}>${s.label}</option>`
+            ).join('');
+            
+            tbody.innerHTML = students.length
+              ? students.map(st => `
+                  <tr>
+                    <td>${st.UserID}</td>
+                    <td>${st.FullName}</td>
+                    <td>
+                      <select class="attd-status" data-id="${st.UserID}">
+                        ${statusOptions}
+                      </select>
+                    </td>
+                    <td><input type="text" class="attd-note mini" placeholder="หมายเหตุ" data-id="${st.UserID}"></td>
+                  </tr>
+                `).join('')
+              : '<tr><td colspan="4" style="text-align:center;color:#999">ไม่พบนักเรียนในห้องนี้</td></tr>';
+
+        } catch(e) {
+            console.error('[DEBUG] Checkin Network or Processing Error:', e);
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#ef4444">โหลดรายชื่อไม่สำเร็จ (ข้อผิดพลาดเครือข่าย)</td></tr>';
+        } finally {
+          busy(false);
+        }
     }
 
     async function saveAttendance(user){
       const date = $('#dateInput').value;
-const subjVal = $('#subjectSelect').value;
+      const subjVal = $('#subjectSelect').value;
       if(!date || !subjVal){ alert('กรอกวันที่/เลือกวิชาให้ครบ'); return; }
 
-      let cls = user.class_name;
-if(['teacher','admin'].includes(user.role)){
-        cls = $('#classInput').value.trim();
-        if(!cls){ alert('กรุณากรอก/เลือกห้อง'); return;
-}
-      }
+      let cls = $('#classInput').value.trim();
+      if(!cls){ alert('กรุณาระบุห้อง'); return; }
 
       const [subjectId, subjectName] = subjVal.split('|');
-const checks = $$('.attd');
-      if(!checks.length){ alert('ยังไม่มีรายชื่อให้เช็ค'); return; }
+      const statusElements = $$('.attd-status');
+      const noteElements = $$('.attd-note');
+      
+      if(!statusElements.length){ alert('ยังไม่มีรายชื่อให้เช็ค'); return; }
 
-      const records = checks.map(ch => ({
+      const records = statusElements.map(ch => ({
         studentId: ch.dataset.id,
-        status: ch.checked ? 'Present' : 'Absent'
+        status: ch.value,
+        note: noteElements.find(n => n.dataset.id === ch.dataset.id).value.trim()
       }));
-busy(true,'กำลังบันทึกเช็คชื่อ...');
+
+      busy(true,'กำลังบันทึกเช็คชื่อ...');
       const r = await api('saveAttendanceBulk', {
         date, subjectId, subjectName, class: cls,
         records, recorderId: user.user_id
       });
-busy(false);
-      alert(r.status==='success' ? `บันทึกสำเร็จ ${r.saved} รายการ` : 'บันทึกไม่สำเร็จ');
+      busy(false);
+      // ✅ FIX: ลดระยะเวลา busy overlay
+      if(r.status==='success') {
+          busy(true, `บันทึกสำเร็จ ${r.saved} รายการ`, 800); 
+      } else {
+          alert('บันทึกไม่สำเร็จ: ' + (r.message || 'ไม่ทราบสาเหตุ'));
+      }
     }
+
 
     // =================== Boot ===================
     document.addEventListener('DOMContentLoaded', async ()=>{
@@ -311,14 +508,38 @@ busy(false);
 
       // ค่าเริ่มต้น
       $('#dateInput').valueAsDate = new Date();
-
-      // ส่วนสิทธิ์เช็คชื่อ
-      showRecordSectionByRole(user);
-      await loadSubjectsForRole(user);
-
-   
-   // โหลดสรุปของฉัน
-      await loadSummary(user);
+      
+      // การแสดงผลตามบทบาท
+      if (isStudent(user)) {
+          // Student: ดูเฉพาะสรุปของตัวเอง
+          $('#statsManagementSection').style.display = 'none';
+          $('#recordSection').style.display = 'none';
+          await loadSummary(user);
+      } else if (isLeader(user)) {
+          // Leader: ดูสรุปของตัวเอง + เช็คชื่อห้องตัวเอง
+          $('#statsManagementSection').style.display = 'none'; 
+          $('#classInput').value = user.class_name || '';
+          $('#recordSection').style.display = 'block';
+          await loadSummary(user);
+          await loadSubjectsForRole(user);
+      } else if (isAdminOrTeacher(user)) {
+          // Admin/Teacher: ดูสรุปของตัวเอง + ดูสถิตินักเรียน + เช็คชื่อ
+          $('#summarySection').style.display = 'none';
+          $('#statsManagementSection').style.display = 'block';
+          $('#recordSection').style.display = 'block';
+          
+          if (isTeacher(user)) {
+            // Teacher: ล็อกห้อง + โหลดวิชา
+            $('#classInput').value = user.class_name || '';
+            $('#classInputWrap').style.display = 'none'; 
+          } else {
+            // Admin: สามารถเลือกห้องได้ในส่วน Stats Management
+            $('#classInput').disabled = false;
+          }
+          
+          await loadClassOptions(user);
+          await loadSubjectsForRole(user);
+      }
 
       // events
       $('#btnLogout').addEventListener('click', ()=>{
@@ -327,17 +548,15 @@ busy(false);
         setTimeout(()=> location.href='index.html', 400);
       });
 
-      $('#btnLoadStudents').addEventListener('click', ()=> loadStudents(user));
+      $('#btnLoadStudents').addEventListener('click', ()=> loadStudentsForCheckin(user));
       $('#btnSaveAttendance').addEventListener('click', ()=> saveAttendance(user));
       $('#btnBack').onclick=()=>{busy(true,'กำลังกลับไปแดชบอร์ด...');setTimeout(()=>location.href='dashboard.html',300);};
       
-      // --- ✅ FIX: ลบ 5 บรรทัดข้างล่างนี้ทิ้ง (โค้ดหลงมาจากหน้าอื่น) ---
-      // $('#btnReload').onclick=async()=>cacheRows=await loadSubjects(u);
-      // $('#qInput').oninput=()=>renderRows(cacheRows,u);
-      // $('#btnAdd').onclick=()=>openCreate(u);
-      // $('#btnClose').onclick=closeModal;
-      // $('#modal').onclick=e=>{if(e.target.id==='modal')closeModal();};
+      // Events สำหรับ Modal สถิติรายบุคคล
+      window.openIndividualStats = openIndividualStats; 
+      $('#btnCloseStats').onclick = closeIndividualStats;
+      $('#modalStats').onclick=e=>{if(e.target.id==='modalStats')closeIndividualStats();};
+      
     });
   </script>
 </body>
-</html>

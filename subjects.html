@@ -14,7 +14,9 @@
   <header>
     <div class="header-inner">
       <div class="brand" style="align-items:center; gap:10px">
-        <button id="btnBack" class="btn mini secondary" style="display:flex; align-items:center; gap:4px; padding:6px 10px"><i data-lucide="arrow-left"></i> ย้อนกลับ</button>
+        <button id="btnBack" class="btn mini secondary icon-only-compact" title="ย้อนกลับ">
+          <i data-lucide="arrow-left"></i> 
+        </button>
         <div class="logo">
         
   <img src="https://img2.pic.in.th/pic/-5f984bd8e785a7ddb.png" alt="logo">
@@ -28,8 +30,7 @@
         <span class="dot"></span>
         <span id="roleBadge" class="role">ROLE</span>
         <span id="userName">ชื่อ-สกุล</span>
-        <button 
-id="btnLogout" class="btn mini" style="padding:8px 12px; margin-left:8px">ออกจากระบบ</button>
+        <button id="btnLogout" class="btn-logout" title="ออกจากระบบ"><i data-lucide="log-out"></i></button>
       </div>
     </div>
   </header>
@@ -249,39 +250,25 @@ body.innerHTML = filtered.length ? filtered.map(r=>{
     }
 
     // =================== Load subjects ===================
-    // --- ✅ FIX: แก้ไข Logic การโหลดข้อมูลทั้งหมด ---
     async function loadSubjects(user){
       busy(true,'กำลังโหลดรายวิชา...');
 try{
-        let res;
-        
-        if(isAdminOrTeacher(user)){
-          // ครู/แอดมิน: โหลดตามที่กรอง
-          $('#wrapClass').style.display = 'block';
-          const cls = $('#classInput').value.trim();
-          const level = $('#levelInput').value.trim();
-          
-          // เรียก API ตัวใหม่: getSubjectsAdmin
-          // ( ưu tiênค้นหาด้วยห้องก่อน ถ้าห้องว่าง ค่อยค้นหาด้วยระดับชั้น)
-          res = await api('getSubjectsAdmin', { 
-            class: cls || undefined, 
-            level: !cls ? (level || undefined) : undefined 
-          });
-          
+        let cls = user.class_name;
+if(isAdminOrTeacher(user)){
+          const v = $('#classInput').value.trim();
+          if(v) cls = v;
+$('#wrapClass').style.display = 'block';
         }else{
-          // นักเรียน/หัวหน้าห้อง: โหลดเฉพาะห้องตัวเอง
           $('#wrapClass').style.display = 'none';
-          $('#levelInput').disabled = true; // ล็อกช่องระดับชั้นด้วย
-          res = await api('getSubjectsByClass', { class: user.class_name });
-        }
+}
 
+        const res = await api('getSubjectsByClass', { class: cls });
 const list = res.subjects || [];
 
         // default level input
-        if(!$('#levelInput').value && list.length > 0 && user.class_name){
-          $('#levelInput').value = user.class_name.split('/')[0] || list[0].ClassLevel || '';
-        } else if (!user.class_name && list.length > 0) {
-          $('#levelInput').value = list[0].ClassLevel || '';
+        if(!$('#levelInput').value && list.length){
+          $('#levelInput').value = list[0].ClassLevel ||
+'';
         }
 
         renderRows(list, user);
@@ -334,7 +321,7 @@ $('#fCredit').value = row.CreditPerWeek || 1;
     // =================== Save / Delete (require GAS functions) ===================
     async function saveSubject(){
       const payload = {
-        SubjectID:   $('#fSubjectID').value.trim(), // ✅ FIX: Key ต้องตรงกับ GAS
+        SubjectID:   $('#fSubjectID').value.trim(), 
         SubjectName: $('#fSubjectName').value.trim(),
         ClassLevel:  $('#fLevel').value.trim(),
         Class:       $('#fClass').value.trim(),
@@ -349,12 +336,8 @@ if(!payload.SubjectID || !payload.SubjectName || !payload.Class){
 }
       busy(true,'กำลังบันทึกข้อมูลวิชา...');
       try{
-        // ถ้ามีอยู่ให้ update, ถ้าไม่มีให้ create (ฝั่ง GAS จะตัดสินใจได้ก็ได้)
-        const act = $('#formTitle').textContent.includes('แก้ไข') ?
-'updateSubject' : 'createSubject';
-        
-        // --- ✅ FIX: เรียก API ที่เราเพิ่มใน code.gs ---
-        const res = await api(act, payload); 
+        // ✅ FIX: เรียกใช้ upsertSubject API ที่ถูกเพิ่มใน code.gs
+        const res = await api('upsertSubject', payload); 
         
         if(res.status !== 'success'){
           alert('บันทึกไม่สำเร็จ: ' + (res.message || 'ไม่ทราบสาเหตุ'));
@@ -375,7 +358,7 @@ if(!id) return;
       if(!confirm('ยืนยันลบวิชา '+id+' ?')) return;
       busy(true,'กำลังลบวิชา...');
       try{
-        // --- ✅ FIX: เรียก API ที่เราเพิ่มใน code.gs ---
+        // ✅ FIX: เรียกใช้ deleteSubject API ที่ถูกเพิ่มใน code.gs
         const res = await api('deleteSubject', { subjectId:id }); 
 if(res.status !== 'success'){
           alert('ลบไม่สำเร็จ: ' + (res.message || 'ไม่ทราบสาเหตุ')); return;
@@ -434,12 +417,15 @@ localStorage.removeItem('lms_user');
       
       // (ถ้าพิมพ์ห้อง/ระดับชั้น ให้กด "โหลดใหม่" เอง)
       // (ถ้าต้องการให้โหลดอัตโนมัติ ให้เพิ่ม .addEventListener('change', ...) ให้ levelInput และ classInput)
-      $('#levelInput').addEventListener('change', async () => {
-         if(isAdminOrTeacher(user)) cacheRows = await loadSubjects(user);
-      });
-      $('#classInput').addEventListener('change', async () => {
-         if(isAdminOrTeacher(user)) cacheRows = await loadSubjects(user);
-      });
+      if(isAdminOrTeacher(user)){
+        $('#levelInput').addEventListener('change', async () => {
+           cacheRows = await loadSubjects(user);
+        });
+        $('#classInput').addEventListener('change', async () => {
+           cacheRows = await loadSubjects(user);
+        });
+      }
+
 
 $('#qInput').addEventListener('input', ()=>{
         renderRows(cacheRows, user);
@@ -456,4 +442,3 @@ $('#btnClose').addEventListener('click', closeModal);
     });
   </script>
 </body>
-</html>
